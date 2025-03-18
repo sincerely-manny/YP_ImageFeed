@@ -9,9 +9,12 @@ timeline.xctimeline
 playground.xcworkspace
 
 .build/
+build/
 DerivedData/
 
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+buildServer.json

@@ -1,10 +1,17 @@
 import UIKit
 
 final class ImagesListViewController: UIViewController {
+  // MARK: - Outlets
   @IBOutlet private var tableView: UITableView!
-  
+
+  // MARK: - Lifecycle
   override func viewDidLoad() {
     super.viewDidLoad()
+    setupTableView()
+  }
+
+  // MARK: - Private Methods
+  private func setupTableView() {
     tableView.dataSource = self
     tableView.delegate = self
     tableView.rowHeight = UITableView.automaticDimension
@@ -16,31 +23,35 @@ final class ImagesListViewController: UIViewController {
   }
 }
 
+// MARK: - Extension DataSource
 extension ImagesListViewController: UITableViewDataSource {
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     19
   }
 
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let cell = tableView.dequeueReusableCell(withIdentifier: ImagesListCell.reuseIdentifier, for: indexPath)
-
-    guard let imageListCell = cell as? ImagesListCell else {
+    guard
+      let imageListCell = tableView.dequeueReusableCell(
+        withIdentifier: ImagesListCell.reuseIdentifier,
+        for: indexPath
+      ) as? ImagesListCell
+    else {
       return UITableViewCell()
     }
 
     let image = UIImage(named: "\(indexPath.row)")
     imageListCell.configure(with: image)
-    if (indexPath.row % 2) == 0 {
-      imageListCell.setIsLiked(true)
-    } else {
-      imageListCell.setIsLiked(false)
-    }
+    imageListCell.setIsLiked(indexPath.row % 2 == 0)
     return imageListCell
   }
 
-  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {}
+  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    // TODO: Implement image selection logic
+    print("Image selected at index \(indexPath.row)")
+  }
 }
 
+// MARK: - Extension UITableViewDelegate
 extension ImagesListViewController: UITableViewDelegate {
-
+  // TODO: Implement table view delegate methods
 }

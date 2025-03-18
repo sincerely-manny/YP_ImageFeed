@@ -1,23 +1,27 @@
 import UIKit
 
+// MARK: - Style
+struct ImageListCellStyle {
+  let gap: CGFloat
+  let paddingHorizontal: CGFloat
+}
+
 final class ImagesListCell: UITableViewCell {
   static let reuseIdentifier = "ImagesListCell"
 
-  struct ImageListCellStyle {
-    let gap: CGFloat
-    let paddingHorizontal: CGFloat
-  }
-  let style = ImageListCellStyle(gap: 8, paddingHorizontal: 16)
+  // MARK: - Private Properties
+  private let style = ImageListCellStyle(gap: 8, paddingHorizontal: 16)
 
-  let thumbnailView = UIImageView()
-  let heartButton = UIButton()
-  let labelContainerView = GradientView()
-  let labelView = UILabel()
+  private let thumbnailView = UIImageView()
+  private let heartButton = UIButton()
+  private let labelContainerView = GradientView()
+  private let labelView = UILabel()
 
-  var aspectRatioConstraint: NSLayoutConstraint?
+  private var aspectRatioConstraint: NSLayoutConstraint?
   private let feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
   private lazy var dateFormatter: DateFormatter = {
     let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "ru_RU")
     formatter.dateStyle = .long
     formatter.timeStyle = .none
     return formatter
@@ -25,8 +29,11 @@ final class ImagesListCell: UITableViewCell {
 
   private var isLiked: Bool = false
 
+  // MARK: - Lifecycle
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
+    layer.backgroundColor = UIColor.ypRed.cgColor
+
     setup()
   }
 
@@ -35,6 +42,13 @@ final class ImagesListCell: UITableViewCell {
     setup()
   }
 
+  override func prepareForReuse() {
+    super.prepareForReuse()
+    thumbnailView.image = nil
+    aspectRatioConstraint?.isActive = false
+  }
+
+  // MARK: - UI Updates
   func configure(with image: UIImage?, date: Date = Date()) {
     thumbnailView.image = image
     let text = dateFormatter.string(from: date)
@@ -56,13 +70,15 @@ final class ImagesListCell: UITableViewCell {
     switchHeartButtonState(animated: animated)
   }
 
+  // MARK: - Private Methods
   private func setup() {
     selectionStyle = .none
     backgroundColor = .clear
     preservesSuperviewLayoutMargins = false
     contentView.preservesSuperviewLayoutMargins = false
     contentView.layoutMargins = UIEdgeInsets(
-      top: style.gap / 2, left: style.paddingHorizontal, bottom: style.gap / 2, right: style.paddingHorizontal)
+      top: style.gap / 2, left: style.paddingHorizontal, bottom: style.gap / 2,
+      right: style.paddingHorizontal)
     setupImageView()
     setupButton()
     setupLabelContainer()
@@ -78,7 +94,8 @@ final class ImagesListCell: UITableViewCell {
     NSLayoutConstraint.activate([
       thumbnailView.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
       thumbnailView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-      thumbnailView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+      thumbnailView.trailingAnchor.constraint(
+        equalTo: contentView.layoutMarginsGuide.trailingAnchor),
       thumbnailView.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
     ])
   }
@@ -87,7 +104,8 @@ final class ImagesListCell: UITableViewCell {
     heartButton.translatesAutoresizingMaskIntoConstraints = false
     heartButton.backgroundColor = .clear
     let symbolConfig = UIImage.SymbolConfiguration(pointSize: 20)
-    let image = UIImage(systemName: "heart.fill", withConfiguration: symbolConfig)?.withTintColor(.ypWhite)
+    let image = UIImage(systemName: "heart.fill", withConfiguration: symbolConfig)?.withTintColor(
+      .ypWhite)
     heartButton.setImage(image, for: .normal)
     heartButton.tintColor = .clear
     heartButton.layer.opacity = 0.5
@@ -118,7 +136,7 @@ final class ImagesListCell: UITableViewCell {
   @objc func didTapHeartButton() {
     feedbackGenerator.prepare()
     feedbackGenerator.impactOccurred()
-    self.setIsLiked(isLiked ? false : true, animated: true)
+    setIsLiked(isLiked ? false : true, animated: true)
   }
 
   private func switchHeartButtonState(animated: Bool) {
@@ -154,9 +172,12 @@ final class ImagesListCell: UITableViewCell {
     contentView.addSubview(labelContainerView)
 
     NSLayoutConstraint.activate([
-      labelContainerView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-      labelContainerView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-      labelContainerView.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
+      labelContainerView.leadingAnchor.constraint(
+        equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+      labelContainerView.trailingAnchor.constraint(
+        equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+      labelContainerView.bottomAnchor.constraint(
+        equalTo: contentView.layoutMarginsGuide.bottomAnchor),
       labelContainerView.heightAnchor.constraint(equalToConstant: 30),
     ])
 
@@ -184,11 +205,5 @@ final class ImagesListCell: UITableViewCell {
     ]
 
     labelView.attributedText = NSAttributedString(string: text ?? "", attributes: attributes)
-  }
-
-  override func prepareForReuse() {
-    super.prepareForReuse()
-    thumbnailView.image = nil
-    aspectRatioConstraint?.isActive = false
   }
 }
