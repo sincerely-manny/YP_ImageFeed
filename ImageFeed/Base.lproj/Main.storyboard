@@ -22,7 +22,7 @@
                         <color key="selectedImageTintColor" name="YPWhite"/>
                     </tabBar>
                     <connections>
-                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="viewControllers" id="uj2-gv-QOY"/>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="viewControllers" id="Cug-jL-6Ez"/>
                         <segue destination="qJC-hv-chW" kind="relationship" relationship="viewControllers" id="n2Z-Gq-TGL"/>
                     </connections>
                 </tabBarController>
@@ -62,14 +62,14 @@
                             <constraint firstItem="kes-LD-3ko" firstAttribute="bottom" secondItem="8bC-Xf-vdC" secondAttribute="bottom" id="tn7-gn-4wS"/>
                         </constraints>
                     </view>
-                    <tabBarItem key="tabBarItem" title="" image="tab_editorial_active" id="S2Z-uA-6gG"/>
+                    <tabBarItem key="tabBarItem" title="" image="tab_editorial_active" id="8qy-la-Sil"/>
                     <connections>
                         <outlet property="tableView" destination="kes-LD-3ko" id="xNu-KN-iDq"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="75.572519083969468" y="4.9295774647887329"/>
+            <point key="canvasLocation" x="1016.8" y="4.4334975369458132"/>
         </scene>
         <!--Profile-->
         <scene sceneID="B6r-TK-cAv">
@@ -86,6 +86,21 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="EKP-4b-lLD" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-215" y="-676"/>
+        </scene>
+        <!--Single Image View Controller-->
+        <scene sceneID="lzg-Pl-qZy">
+            <objects>
+                <viewController id="mz3-sj-ygc" customClass="SingleImageViewController" customModule="ImageFeed" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="27Z-re-7rV">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="Fxx-Wn-8lE"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="KeI-kd-YO6" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1673" y="244"/>
         </scene>
     </scenes>
     <resources>

@@ -47,8 +47,14 @@ extension ImagesListViewController: UITableViewDataSource {
   }
 
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-    // TODO: Implement image selection logic
-    print("Image selected at index \(indexPath.row)")
+    guard let cell = tableView.cellForRow(at: indexPath) as? ImagesListCell,
+      let image = cell.thumbnailView.image as UIImage?
+    else { return }
+    let fullscreenVC = SingleImageViewController()
+    fullscreenVC.configureImageView(with: image)
+    fullscreenVC.modalPresentationStyle = .fullScreen
+    fullscreenVC.modalTransitionStyle = .crossDissolve
+    present(fullscreenVC, animated: true)
   }
 }
 
