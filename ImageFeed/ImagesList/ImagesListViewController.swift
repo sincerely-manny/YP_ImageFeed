@@ -20,6 +20,7 @@ final class ImagesListViewController: UIViewController {
     tableView.separatorStyle = .none
     tableView.layer.backgroundColor = .none
     tableView.alwaysBounceHorizontal = false
+    tableView.indicatorStyle = .white
   }
 }
 
