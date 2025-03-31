@@ -1,8 +1,10 @@
+import LinkPresentation
 import UIKit
 
 final class SingleImageViewController: UIViewController {
   private let imageView = UIImageView()
   private let scrollView = UIScrollView()
+  private var activityViewController: UIActivityViewController?
 
   // MARK: - Lifecycle
 
@@ -11,6 +13,7 @@ final class SingleImageViewController: UIViewController {
     configureView()
     setupScrollView()
     setupImageView()
+    setupButtons()
     setupGestures()
     setupBackButton()
   }
@@ -29,6 +32,8 @@ final class SingleImageViewController: UIViewController {
 
   func configureImageView(with image: UIImage) {
     imageView.image = image
+    activityViewController = UIActivityViewController(
+      activityItems: [image, self], applicationActivities: nil)
   }
 
   // MARK: - Private methods
@@ -108,7 +113,7 @@ final class SingleImageViewController: UIViewController {
     let image = UIImage(systemName: "chevron.left", withConfiguration: symbolConfig)
     backButton.setImage(image, for: .normal)
     backButton.tintColor = .ypWhite
-    backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
+    backButton.addTarget(self, action: #selector(didTapBackButton), for: .touchUpInside)
     view.addSubview(backButton)
     backButton.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
@@ -119,17 +124,63 @@ final class SingleImageViewController: UIViewController {
     ])
   }
 
+  private func setupButtons() {
+
+    let likeButton = UIButton(type: .system)
+    likeButton.setImage(UIImage(named: "heart.fill.white.shadow"), for: .normal)
+    let shareButton = UIButton(type: .system)
+    shareButton.setImage(UIImage(named: "rectangle.and.arrow.up"), for: .normal)
+
+    //[shareButton, likeButton].forEach { button in
+
+    //}
+
+    //likeButton.addTarget(self, action: #selector(likeButtonTapped), for: .touchUpInside)
+    shareButton.addTarget(self, action: #selector(didTapShareButton), for: .touchUpInside)
+
+    let container = UIStackView(arrangedSubviews: [
+      UIView(), likeButton, UIView(), shareButton, UIView(),
+    ])
+
+    container.axis = .horizontal
+    container.alignment = .center
+    container.distribution = .equalSpacing
+    container.translatesAutoresizingMaskIntoConstraints = false
+
+    view.addSubview(container)
+    NSLayoutConstraint.activate([
+      container.bottomAnchor.constraint(
+        equalTo: view.layoutMarginsGuide.bottomAnchor, constant: -16),
+      container.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      container.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+      container.heightAnchor.constraint(equalToConstant: 50),
+    ])
+
+    [shareButton, likeButton].forEach { button in
+      button.backgroundColor = .ypBlack
+      button.tintColor = .ypWhite
+      button.translatesAutoresizingMaskIntoConstraints = false
+      button.layer.cornerRadius = 25
+      button.clipsToBounds = true
+
+      NSLayoutConstraint.activate([
+        button.widthAnchor.constraint(equalToConstant: 50),
+        button.heightAnchor.constraint(equalToConstant: 50),
+      ])
+    }
+
+  }
+
+  // MARK: - Gesture Handling
+
   private func setupGestures() {
-    // Double tap to zoom
     let doubleTapGesture = UITapGestureRecognizer(
       target: self, action: #selector(handleDoubleTap(_:)))
     doubleTapGesture.numberOfTapsRequired = 2
     view.addGestureRecognizer(doubleTapGesture)
   }
 
-  // MARK: - Gesture Handling
-
-  @objc private func backButtonTapped() {
+  @objc private func didTapBackButton() {
     dismiss(animated: true)
   }
 
@@ -147,6 +198,12 @@ final class SingleImageViewController: UIViewController {
       scrollView.zoom(to: zoomRect, animated: true)
     }
   }
+
+  @objc private func didTapShareButton() {
+    guard let activityViewController else { return }
+    present(activityViewController, animated: true)
+  }
+
 }
 
 // MARK: - ScrollViewDelegate
@@ -158,5 +215,30 @@ extension SingleImageViewController: UIScrollViewDelegate {
 
   func scrollViewDidZoom(_ scrollView: UIScrollView) {
     centerScrollViewContents()
+  }
+}
+
+extension SingleImageViewController: UIActivityItemSource {
+  func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController)
+    -> Any
+  {
+    imageView.image ?? UIImage()
+  }
+
+  func activityViewController(
+    _ activityViewController: UIActivityViewController,
+    itemForActivityType activityType: UIActivity.ActivityType?
+  ) -> Any? {
+    return nil
+  }
+
+  func activityViewControllerLinkMetadata(_ activityViewController: UIActivityViewController)
+    -> LPLinkMetadata?
+  {
+    let image = imageView.image ?? UIImage()
+    let imageProvider = NSItemProvider(object: image)
+    let metadata = LPLinkMetadata()
+    metadata.imageProvider = imageProvider
+    return metadata
   }
 }
