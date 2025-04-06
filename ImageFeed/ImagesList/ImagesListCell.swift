@@ -96,7 +96,7 @@ final class ImagesListCell: UITableViewCell {
       thumbnailView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
       thumbnailView.trailingAnchor.constraint(
         equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-      thumbnailView.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
+      thumbnailView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor)
     ])
   }
 

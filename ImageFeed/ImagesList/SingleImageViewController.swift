@@ -22,6 +22,7 @@ final class SingleImageViewController: UIViewController {
     super.viewDidLayoutSubviews()
     scrollView.frame = view.bounds
     updateImageViewFrame()
+    scrollToCenter()
   }
 
   deinit {
@@ -33,7 +34,9 @@ final class SingleImageViewController: UIViewController {
   func configureImageView(with image: UIImage) {
     imageView.image = image
     activityViewController = UIActivityViewController(
-      activityItems: [image, self], applicationActivities: nil)
+      activityItems: [image, self],
+      applicationActivities: nil
+    )
   }
 
   // MARK: - Private methods
@@ -60,8 +63,7 @@ final class SingleImageViewController: UIViewController {
   }
 
   private func setupImageView() {
-    imageView.contentMode = .scaleAspectFit
-    imageView.frame.size = view.frame.size
+    imageView.contentMode = .scaleAspectFill
   }
 
   private func updateImageViewFrame() {
@@ -76,16 +78,17 @@ final class SingleImageViewController: UIViewController {
     let widthRatio = viewWidth / imageWidth
     let heightRatio = viewHeight / imageHeight
 
-    let minRatio = min(widthRatio, heightRatio)
+    let maxRatio = max(widthRatio, heightRatio)
+    //  let minRatio = min(widthRatio, heightRatio) // probably should chnge to min ratio so image will fit to screen
 
-    let scaledWidth = imageWidth * minRatio
-    let scaledHeight = imageHeight * minRatio
+    let scaledWidth = imageWidth * maxRatio
+    let scaledHeight = imageHeight * maxRatio
 
     let imageFrame = CGRect(x: 0, y: 0, width: scaledWidth, height: scaledHeight)
     imageView.frame = imageFrame
     scrollView.contentSize = imageFrame.size
 
-    self.centerScrollViewContents()
+    centerScrollViewContents()
   }
 
   private func centerScrollViewContents() {
@@ -105,6 +108,16 @@ final class SingleImageViewController: UIViewController {
     }
 
     imageView.frame = contentFrame
+  }
+
+  private func scrollToCenter() {
+    let offsetX =
+      (scrollView.contentSize.width > scrollView.frame.size.width)
+      ? (scrollView.contentSize.width - scrollView.frame.size.width) / 2 : 0
+    let offsetY =
+      (scrollView.contentSize.height > scrollView.frame.size.height)
+      ? (scrollView.contentSize.height - scrollView.frame.size.height) / 2 : 0
+    scrollView.setContentOffset(CGPoint(x: offsetX, y: offsetY), animated: false)
   }
 
   private func setupBackButton() {
@@ -131,11 +144,6 @@ final class SingleImageViewController: UIViewController {
     let shareButton = UIButton(type: .system)
     shareButton.setImage(UIImage(named: "rectangle.and.arrow.up"), for: .normal)
 
-    //[shareButton, likeButton].forEach { button in
-
-    //}
-
-    //likeButton.addTarget(self, action: #selector(likeButtonTapped), for: .touchUpInside)
     shareButton.addTarget(self, action: #selector(didTapShareButton), for: .touchUpInside)
 
     let container = UIStackView(arrangedSubviews: [
@@ -150,7 +158,9 @@ final class SingleImageViewController: UIViewController {
     view.addSubview(container)
     NSLayoutConstraint.activate([
       container.bottomAnchor.constraint(
-        equalTo: view.layoutMarginsGuide.bottomAnchor, constant: -16),
+        equalTo: view.layoutMarginsGuide.bottomAnchor,
+        constant: -16
+      ),
       container.leadingAnchor.constraint(equalTo: view.leadingAnchor),
       container.trailingAnchor.constraint(equalTo: view.trailingAnchor),
       container.heightAnchor.constraint(equalToConstant: 50),
@@ -175,7 +185,9 @@ final class SingleImageViewController: UIViewController {
 
   private func setupGestures() {
     let doubleTapGesture = UITapGestureRecognizer(
-      target: self, action: #selector(handleDoubleTap(_:)))
+      target: self,
+      action: #selector(handleDoubleTap(_:))
+    )
     doubleTapGesture.numberOfTapsRequired = 2
     view.addGestureRecognizer(doubleTapGesture)
   }
