@@ -2,45 +2,14 @@ import LinkPresentation
 import UIKit
 
 final class SingleImageViewController: UIViewController {
-  private let imageView = UIImageView()
-  private let scrollView = UIScrollView()
+  private lazy var imageView = {
+    let imageView = UIImageView()
+    imageView.contentMode = .scaleAspectFill
+    return imageView
+  }()
 
-  // MARK: - Lifecycle
-
-  override func viewDidLoad() {
-    super.viewDidLoad()
-    configureView()
-    setupScrollView()
-    setupImageView()
-    setupButtons()
-    setupGestures()
-    setupBackButton()
-  }
-
-  override func viewDidLayoutSubviews() {
-    super.viewDidLayoutSubviews()
-    scrollView.frame = view.bounds
-    updateImageViewFrame()
-    scrollToCenter()
-  }
-
-  deinit {
-    imageView.image = nil
-  }
-
-  // MARK: - Public methods
-
-  func configureImageView(with image: UIImage) {
-    imageView.image = image
-  }
-
-  // MARK: - Private methods
-
-  private func configureView() {
-    view.backgroundColor = .ypBlack
-  }
-
-  private func setupScrollView() {
+  private lazy var scrollView = {
+    let scrollView = UIScrollView()
     scrollView.delegate = self
     scrollView.showsVerticalScrollIndicator = false
     scrollView.showsHorizontalScrollIndicator = false
@@ -55,10 +24,36 @@ final class SingleImageViewController: UIViewController {
       scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
       scrollView.rightAnchor.constraint(equalTo: view.rightAnchor),
     ])
+    return scrollView
+  }()
+
+  // MARK: - Lifecycle
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    configureView()
+    setupButtons()
+    setupGestures()
+    setupBackButton()
   }
 
-  private func setupImageView() {
-    imageView.contentMode = .scaleAspectFill
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+    scrollView.frame = view.bounds
+    updateImageViewFrame()
+    scrollToCenter()
+  }
+
+  // MARK: - Public methods
+
+  func configureImageView(with image: UIImage) {
+    imageView.image = image
+  }
+
+  // MARK: - Private methods
+
+  private func configureView() {
+    view.backgroundColor = .ypBlack
   }
 
   private func updateImageViewFrame() {
