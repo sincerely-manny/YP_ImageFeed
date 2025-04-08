@@ -4,7 +4,6 @@ import UIKit
 final class SingleImageViewController: UIViewController {
   private let imageView = UIImageView()
   private let scrollView = UIScrollView()
-  private var activityViewController: UIActivityViewController?
 
   // MARK: - Lifecycle
 
@@ -33,10 +32,6 @@ final class SingleImageViewController: UIViewController {
 
   func configureImageView(with image: UIImage) {
     imageView.image = image
-    activityViewController = UIActivityViewController(
-      activityItems: [image, self],
-      applicationActivities: nil
-    )
   }
 
   // MARK: - Private methods
@@ -212,7 +207,11 @@ final class SingleImageViewController: UIViewController {
   }
 
   @objc private func didTapShareButton() {
-    guard let activityViewController else { return }
+    guard let image = imageView.image else { return }
+    let activityViewController = UIActivityViewController(
+      activityItems: [image, self as UIActivityItemSource],
+      applicationActivities: nil
+    )
     present(activityViewController, animated: true)
   }
 
