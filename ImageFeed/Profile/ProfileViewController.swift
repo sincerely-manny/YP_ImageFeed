@@ -108,11 +108,10 @@ final class ProfileViewController: UIViewController {
   private func setupTag(parentView view: UIView, topAnchor: NSLayoutYAxisAnchor) -> UILabel {
     let label = UILabel()
 
-    label.textColor = .ypGray
     label.baselineAdjustment = .alignCenters
     let attributes: [NSAttributedString.Key: Any] = [
       .font: UIFont.systemFont(ofSize: 13, weight: .regular),
-      .foregroundColor: UIColor.ypWhite,
+      .foregroundColor: UIColor.ypGray,
     ]
     label.attributedText = NSAttributedString(string: "@ekaterina_nov", attributes: attributes)
 
