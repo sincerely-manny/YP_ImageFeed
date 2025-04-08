@@ -24,6 +24,7 @@ final class SingleImageViewController: UIViewController {
       scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
       scrollView.rightAnchor.constraint(equalTo: view.rightAnchor),
     ])
+    view.sendSubviewToBack(scrollView)
     return scrollView
   }()
 
@@ -168,7 +169,6 @@ final class SingleImageViewController: UIViewController {
         button.heightAnchor.constraint(equalToConstant: 50),
       ])
     }
-
   }
 
   // MARK: - Gesture Handling
