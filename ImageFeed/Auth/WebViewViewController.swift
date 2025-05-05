@@ -1,9 +1,21 @@
 import UIKit
-import WebKit
+@preconcurrency import WebKit
 
 final class WebViewViewController: UIViewController {
   private let webView = WKWebView()
   private let activityIndicator = UIActivityIndicatorView(style: .large)
+  private let progressBar = UIProgressView(progressViewStyle: .default)
+
+  private var delegate: WebViewViewControllerDelegate
+
+  init(delegate: WebViewViewControllerDelegate) {
+    self.delegate = delegate
+    super.init(nibName: nil, bundle: nil)
+  }
+
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -12,6 +24,7 @@ final class WebViewViewController: UIViewController {
     configureNavBar()
     setupWebView()
     setupActivityIndicator()
+    setupProgressBar()
 
     guard let baseUrl = Constants.defaultBaseURL else { return }
     var urlComponents = URLComponents(url: baseUrl, resolvingAgainstBaseURL: true)
@@ -26,6 +39,22 @@ final class WebViewViewController: UIViewController {
       webView.load(request)
     }
 
+  }
+
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    webView.addObserver(
+      self,
+      forKeyPath: #keyPath(WKWebView.estimatedProgress),
+      options: .new,
+      context: nil)
+  }
+
+  override func viewDidDisappear(_ animated: Bool) {
+    super.viewDidDisappear(animated)
+    webView.removeObserver(
+      self,
+      forKeyPath: #keyPath(WKWebView.estimatedProgress))
   }
 
   private func setupWebView() {
@@ -63,29 +92,88 @@ final class WebViewViewController: UIViewController {
       activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
       activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
     ])
+    activityIndicator.startAnimating()
   }
 
   override var preferredStatusBarStyle: UIStatusBarStyle {
     return .darkContent
   }
 
+  private func setupProgressBar() {
+    progressBar.translatesAutoresizingMaskIntoConstraints = false
+    progressBar.progressTintColor = .ypBlack
+    progressBar.trackTintColor = .clear
+    view.addSubview(progressBar)
+    NSLayoutConstraint.activate([
+      progressBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+      progressBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      progressBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+    ])
+  }
+
+}
+
+extension WebViewViewController {
+  override func observeValue(
+    forKeyPath keyPath: String?,
+    of object: Any?,
+    change: [NSKeyValueChangeKey: Any]?,
+    context: UnsafeMutableRawPointer?
+  ) {
+    if keyPath == #keyPath(WKWebView.estimatedProgress) {
+      updateProgress()
+    } else {
+      super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+    }
+  }
+
+  private func updateProgress() {
+    progressBar.setProgress(Float(webView.estimatedProgress), animated: true)
+    progressBar.isHidden = fabs(webView.estimatedProgress - 1.0) <= 0.0001
+  }
 }
 
 extension WebViewViewController: WKNavigationDelegate {
-  func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+  func webView(
+    _ webView: WKWebView,
+    decidePolicyFor navigationAction: WKNavigationAction,
+    decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+  ) {
+    if let code = grabOAuthCode(from: navigationAction) {
+      delegate.webViewViewController(self, didAuthenticateWithCode: code)
+      decisionHandler(.cancel)
+    } else {
+      decisionHandler(.allow)
+    }
+  }
+
+  private func grabOAuthCode(from navigationAction: WKNavigationAction) -> String? {
+    if let url = navigationAction.request.url,
+      let urlComponents = URLComponents(string: url.absoluteString),
+      urlComponents.path == "/oauth/authorize/native",
+      let items = urlComponents.queryItems,
+      let codeItem = items.first(where: { $0.name == "code" })
+    {
+      return codeItem.value
+    } else {
+      return nil
+    }
+  }
+
+  func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation) {
     activityIndicator.startAnimating()
   }
 
-  func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+  func webView(_ webView: WKWebView, didFinish navigation: WKNavigation) {
     activityIndicator.stopAnimating()
   }
 
-  func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+  func webView(_ webView: WKWebView, didFail navigation: WKNavigation, withError error: Error) {
     activityIndicator.stopAnimating()
   }
 
   func webView(
-    _ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!,
+    _ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation,
     withError error: Error
   ) {
     activityIndicator.stopAnimating()
