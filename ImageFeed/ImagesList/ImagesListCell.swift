@@ -12,7 +12,7 @@ final class ImagesListCell: UITableViewCell {
   // MARK: - Private Properties
   private let style = ImageListCellStyle(gap: 8, paddingHorizontal: 16)
 
-  private let thumbnailView = UIImageView()
+  let thumbnailView = UIImageView()
   private let heartButton = UIButton()
   private let labelContainerView = GradientView()
   private let labelView = UILabel()
@@ -96,7 +96,7 @@ final class ImagesListCell: UITableViewCell {
       thumbnailView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
       thumbnailView.trailingAnchor.constraint(
         equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-      thumbnailView.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
+      thumbnailView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor)
     ])
   }
 
