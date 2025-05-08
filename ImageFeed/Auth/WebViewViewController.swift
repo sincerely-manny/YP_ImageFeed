@@ -28,6 +28,7 @@ final class WebViewViewController: UIViewController {
 
     guard let baseUrl = Constants.defaultBaseURL else { return }
     var urlComponents = URLComponents(url: baseUrl, resolvingAgainstBaseURL: true)
+    urlComponents?.path = "/oauth/authorize"
     urlComponents?.queryItems = [
       URLQueryItem(name: "client_id", value: Constants.accessKey),
       URLQueryItem(name: "redirect_uri", value: Constants.redirectURI),
