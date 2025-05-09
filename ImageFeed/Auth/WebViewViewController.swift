@@ -165,19 +165,21 @@ extension WebViewViewController: WKNavigationDelegate {
   }
 
   private func grabOAuthCode(from navigationAction: WKNavigationAction) throws -> String {
-    if let url = navigationAction.request.url,
+    guard let url = navigationAction.request.url,
       let urlComponents = URLComponents(string: url.absoluteString),
-      urlComponents.path == "/oauth/authorize/native",
-      let items = urlComponents.queryItems,
-      let codeItem = items.first(where: { $0.name == "code" })
-    {
-      guard let code = codeItem.value else {
-        throw WebViewViewControllerError.codeNotFound
-      }
-      return code
-    } else {
+      urlComponents.path == "/oauth/authorize/native"
+    else {
       throw WebViewViewControllerError.invalidURL
     }
+
+    guard let items = urlComponents.queryItems,
+      let codeItem = items.first(where: { $0.name == "code" }),
+      let code = codeItem.value
+    else {
+      throw WebViewViewControllerError.codeNotFound
+    }
+
+    return code
   }
 
   func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation) {
