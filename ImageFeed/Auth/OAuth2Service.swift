@@ -1,6 +1,14 @@
 import Foundation
 
-let ACCESS_TOKEN_STORED_KEY = "unsplashAccessToken"
+enum ConstansKeys {
+  static let accessToken = "unsplashAccessToken"
+}
+
+enum OAuth2Error: Error {
+  case invalidURL
+  case invalidResponse
+  case decodingError
+}
 
 enum AuthServiceError: Error {
   case invalidRequest
@@ -16,12 +24,26 @@ final class OAuth2Service {
     retrieveAccessToken()
   }
 
+  private lazy var decoder: JSONDecoder = {
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    return decoder
+  }()
+
   func getAccessToken(code: String, completion: @escaping (Result<Bool, Error>) -> Void) {
     assert(Thread.isMainThread)
-    guard let request = getURLRequest(code: code) else { return }
 
     guard lastCode != code else {
       completion(.failure(AuthServiceError.invalidRequest))
+      return
+    }
+
+    var request: URLRequest
+    do {
+      request = try getURLRequest(code: code)
+    } catch {
+      print("❌ Error creating URL request: \(error)")
+      completion(.failure(error))
       return
     }
 
@@ -33,11 +55,11 @@ final class OAuth2Service {
         if let error = error {
           print("Error fetching access token: \(error)")
           completion(.failure(error))
-        } else if let data = data {
+        } else if let data = data, let self = self {
           do {
-            let tokenResponse = try JSONDecoder().decode(OAuthTokenResponseBody.self, from: data)
+            let tokenResponse = try self.decoder.decode(OAuthTokenResponseBody.self, from: data)
             let accessToken = tokenResponse.accessToken
-            self?.storeAccessToken(accessToken)
+            self.storeAccessToken(accessToken)
             completion(.success(true))
           } catch {
             print("Error decoding token response: \(error)")
@@ -53,8 +75,11 @@ final class OAuth2Service {
     task?.resume()
   }
 
-  private func getURLRequest(code: String) -> URLRequest? {
-    guard let baseUrl = Constants.defaultBaseURL else { return nil }
+  private func getURLRequest(code: String) throws -> URLRequest {
+    guard let baseUrl = Constants.defaultBaseURL else {
+      print("❌ Error: Base URL is nil")
+      throw OAuth2Error.invalidURL
+    }
     var urlComponents = URLComponents(url: baseUrl, resolvingAgainstBaseURL: true)
     urlComponents?.path = "/oauth/token"
     urlComponents?.queryItems = [
@@ -64,41 +89,35 @@ final class OAuth2Service {
       URLQueryItem(name: "code", value: code),
       URLQueryItem(name: "grant_type", value: "authorization_code"),
     ]
-    guard let url = urlComponents?.url else { return nil }
+    guard let url = urlComponents?.url else {
+      print("❌ Error creating URL from components")
+      throw OAuth2Error.invalidURL
+    }
     var request = URLRequest(url: url)
-    request.httpMethod = "POST"
+    request.httpMethod = HTTPMethod.post.rawValue
     return request
   }
 
   private func storeAccessToken(_ token: String) {
     // TODO: Store the access token securely
-    UserDefaults.standard.set(token, forKey: ACCESS_TOKEN_STORED_KEY)
+    UserDefaults.standard.set(token, forKey: ConstansKeys.accessToken)
   }
 
   private func retrieveAccessToken() -> String? {
-    UserDefaults.standard.string(forKey: ACCESS_TOKEN_STORED_KEY)
+    UserDefaults.standard.string(forKey: ConstansKeys.accessToken)
   }
 
   private func clearAccessToken() {
-    UserDefaults.standard.removeObject(forKey: ACCESS_TOKEN_STORED_KEY)
+    UserDefaults.standard.removeObject(forKey: ConstansKeys.accessToken)
   }
 
   func isLoggedIn() -> Bool {
     retrieveAccessToken() != nil
   }
 
-}
-
-struct OAuthTokenResponseBody: Decodable {
-  let accessToken: String
-  let tokenType: String
-  let scope: String
-  let createdAt: Int
-
-  enum CodingKeys: String, CodingKey {
-    case accessToken = "access_token"
-    case tokenType = "token_type"
-    case scope
-    case createdAt = "created_at"
+  func logout() {
+    clearAccessToken()
+    transitionToViewController(viewController: SplashViewController())
   }
+
 }

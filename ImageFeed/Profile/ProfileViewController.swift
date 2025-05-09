@@ -103,6 +103,12 @@ final class ProfileViewController: UIViewController {
       exitButton.heightAnchor.constraint(equalToConstant: 44),
       exitButton.centerYAnchor.constraint(equalTo: centerYAnchor),
     ])
+
+    exitButton.addTarget(self, action: #selector(exitButtonTapped), for: .touchUpInside)
+  }
+
+  @objc private func exitButtonTapped() {
+    OAuth2Service.shared.logout()
   }
 
   // MARK: - Name

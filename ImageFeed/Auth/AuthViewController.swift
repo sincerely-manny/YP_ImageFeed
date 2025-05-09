@@ -71,11 +71,11 @@ extension AuthViewController: WebViewViewControllerDelegate {
     OAuth2Service.shared.getAccessToken(code: code) { result in
       UIBlockingProgressHUD.dismiss()
       switch result {
-      case .success(_):
+      case .success:
         transitionToViewController(controllerIdentifier: "MainTabbarController")
       case .failure(let error):
         //TODO: Handle error
-        print("Error fetching access token: \(error)")
+        print("❌ Error fetching access token: \(error)")
       }
     }
   }
