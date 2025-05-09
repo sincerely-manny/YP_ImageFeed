@@ -2,34 +2,55 @@ import Foundation
 
 let ACCESS_TOKEN_STORED_KEY = "unsplashAccessToken"
 
+enum AuthServiceError: Error {
+  case invalidRequest
+}
+
 final class OAuth2Service {
   static let shared = OAuth2Service()
+  private var task: URLSessionTask?
+  private var lastCode: String?
+
   private init() {}
   var accessToken: String? {
     retrieveAccessToken()
   }
 
   func getAccessToken(code: String, completion: @escaping (Result<Bool, Error>) -> Void) {
+    assert(Thread.isMainThread)
     guard let request = getURLRequest(code: code) else { return }
-    let task = URLSession.shared.data(for: request) { result in
-      switch result {
-      case .success(let data):
-        do {
-          let tokenResponse = try JSONDecoder().decode(OAuthTokenResponseBody.self, from: data)
-          let accessToken = tokenResponse.accessToken
-          self.storeAccessToken(accessToken)
-          completion(.success(true))
-        } catch {
-          print("Error decoding token response: \(error)")
-          completion(.failure(error))
-        }
-      case .failure(let error):
-        print("Error fetching access token: \(error)")
-        completion(.failure(error))
-      }
+
+    guard lastCode != code else {
+      completion(.failure(AuthServiceError.invalidRequest))
+      return
     }
 
-    task.resume()
+    task?.cancel()
+    lastCode = code
+
+    task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+      DispatchQueue.main.async {
+        if let error = error {
+          print("Error fetching access token: \(error)")
+          completion(.failure(error))
+        } else if let data = data {
+          do {
+            let tokenResponse = try JSONDecoder().decode(OAuthTokenResponseBody.self, from: data)
+            let accessToken = tokenResponse.accessToken
+            self?.storeAccessToken(accessToken)
+            completion(.success(true))
+          } catch {
+            print("Error decoding token response: \(error)")
+            completion(.failure(error))
+          }
+        } else {
+          completion(.failure(AuthServiceError.invalidRequest))
+        }
+        self?.task = nil
+        self?.lastCode = nil
+      }
+    }
+    task?.resume()
   }
 
   private func getURLRequest(code: String) -> URLRequest? {
