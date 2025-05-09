@@ -76,6 +76,14 @@ extension AuthViewController: WebViewViewControllerDelegate {
       case .failure(let error):
         //TODO: Handle error
         print("❌ Error fetching access token: \(error)")
+
+        let alert = UIAlertController(
+          title: "Что-то пошло не так",
+          message: "Не удалось войти в систему",
+          preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+
       }
     }
   }
