@@ -1,4 +1,5 @@
 import Foundation
+import KeychainAccess
 
 enum ConstansKeys {
   static let accessToken = "unsplashAccessToken"
@@ -18,6 +19,7 @@ final class OAuth2Service {
   static let shared = OAuth2Service()
   private var task: URLSessionTask?
   private var lastCode: String?
+  private let keychain = Keychain(service: "sincerelymanny.practicum.ImageFeed")
 
   private lazy var decoder: JSONDecoder = {
     let decoder = JSONDecoder()
@@ -85,7 +87,7 @@ final class OAuth2Service {
       URLQueryItem(name: "grant_type", value: "authorization_code"),
     ]
     guard let url = urlComponents?.url else {
-      print("❌ Error creating URL from components")
+      print("❌ [OAuth2Service] Error creating URL from components")
       throw OAuth2Error.invalidURL
     }
     var request = URLRequest(url: url)
@@ -94,16 +96,15 @@ final class OAuth2Service {
   }
 
   private func storeAccessToken(_ token: String) {
-    // TODO: Store the access token securely
-    UserDefaults.standard.set(token, forKey: ConstansKeys.accessToken)
+    keychain[ConstansKeys.accessToken] = token
   }
 
   private func retrieveAccessToken() -> String? {
-    UserDefaults.standard.string(forKey: ConstansKeys.accessToken)
+    keychain[ConstansKeys.accessToken]
   }
 
   private func clearAccessToken() {
-    UserDefaults.standard.removeObject(forKey: ConstansKeys.accessToken)
+    keychain[ConstansKeys.accessToken] = nil
   }
 
   func isLoggedIn() -> Bool {
