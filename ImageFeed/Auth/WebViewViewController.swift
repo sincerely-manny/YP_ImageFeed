@@ -1,6 +1,11 @@
 import UIKit
 @preconcurrency import WebKit
 
+enum WebViewViewControllerError: Error {
+  case invalidURL
+  case codeNotFound
+}
+
 final class WebViewViewController: UIViewController {
   private let webView = WKWebView()
   private let activityIndicator = UIActivityIndicatorView(style: .large)
@@ -26,7 +31,10 @@ final class WebViewViewController: UIViewController {
     setupActivityIndicator()
     setupProgressBar()
 
-    guard let baseUrl = Constants.defaultBaseURL else { return }
+    guard let baseUrl = Constants.defaultBaseURL else {
+      print("❌ Error: Base URL is nil")
+      return
+    }
     var urlComponents = URLComponents(url: baseUrl, resolvingAgainstBaseURL: true)
     urlComponents?.path = "/oauth/authorize"
     urlComponents?.queryItems = [
@@ -38,6 +46,8 @@ final class WebViewViewController: UIViewController {
     if let url = urlComponents?.url {
       let request = URLRequest(url: url)
       webView.load(request)
+    } else {
+      print("❌ Error creating URL from components")
     }
 
   }
@@ -140,24 +150,33 @@ extension WebViewViewController: WKNavigationDelegate {
     decidePolicyFor navigationAction: WKNavigationAction,
     decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
   ) {
-    if let code = grabOAuthCode(from: navigationAction) {
-      delegate.webViewViewController(self, didAuthenticateWithCode: code)
-      decisionHandler(.cancel)
-    } else {
+    var code: String
+
+    do {
+      code = try grabOAuthCode(from: navigationAction)
+    } catch {
+      print("❌ Error: \(error)")
       decisionHandler(.allow)
+      return
     }
+
+    delegate.webViewViewController(self, didAuthenticateWithCode: code)
+    decisionHandler(.cancel)
   }
 
-  private func grabOAuthCode(from navigationAction: WKNavigationAction) -> String? {
+  private func grabOAuthCode(from navigationAction: WKNavigationAction) throws -> String {
     if let url = navigationAction.request.url,
       let urlComponents = URLComponents(string: url.absoluteString),
       urlComponents.path == "/oauth/authorize/native",
       let items = urlComponents.queryItems,
       let codeItem = items.first(where: { $0.name == "code" })
     {
-      return codeItem.value
+      guard let code = codeItem.value else {
+        throw WebViewViewControllerError.codeNotFound
+      }
+      return code
     } else {
-      return nil
+      throw WebViewViewControllerError.invalidURL
     }
   }
 

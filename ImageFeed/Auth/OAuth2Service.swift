@@ -2,6 +2,12 @@ import Foundation
 
 let ACCESS_TOKEN_STORED_KEY = "unsplashAccessToken"
 
+enum OAuth2Error: Error {
+  case invalidURL
+  case invalidResponse
+  case decodingError
+}
+
 final class OAuth2Service {
   static let shared = OAuth2Service()
   private init() {}
@@ -10,7 +16,14 @@ final class OAuth2Service {
   }
 
   func getAccessToken(code: String, completion: @escaping (Result<Bool, Error>) -> Void) {
-    guard let request = getURLRequest(code: code) else { return }
+    var request: URLRequest
+    do {
+      request = try getURLRequest(code: code)
+    } catch {
+      print("❌ Error creating URL request: \(error)")
+      completion(.failure(error))
+      return
+    }
     let task = URLSession.shared.data(for: request) { result in
       switch result {
       case .success(let data):
@@ -20,11 +33,11 @@ final class OAuth2Service {
           self.storeAccessToken(accessToken)
           completion(.success(true))
         } catch {
-          print("Error decoding token response: \(error)")
+          print("❌ Error decoding token response: \(error)")
           completion(.failure(error))
         }
       case .failure(let error):
-        print("Error fetching access token: \(error)")
+        print("❌ Error fetching access token: \(error)")
         completion(.failure(error))
       }
     }
@@ -32,8 +45,11 @@ final class OAuth2Service {
     task.resume()
   }
 
-  private func getURLRequest(code: String) -> URLRequest? {
-    guard let baseUrl = Constants.defaultBaseURL else { return nil }
+  private func getURLRequest(code: String) throws -> URLRequest {
+    guard let baseUrl = Constants.defaultBaseURL else {
+      print("❌ Error: Base URL is nil")
+      throw OAuth2Error.invalidURL
+    }
     var urlComponents = URLComponents(url: baseUrl, resolvingAgainstBaseURL: true)
     urlComponents?.path = "/oauth/token"
     urlComponents?.queryItems = [
@@ -43,7 +59,10 @@ final class OAuth2Service {
       URLQueryItem(name: "code", value: code),
       URLQueryItem(name: "grant_type", value: "authorization_code"),
     ]
-    guard let url = urlComponents?.url else { return nil }
+    guard let url = urlComponents?.url else {
+      print("❌ Error creating URL from components")
+      throw OAuth2Error.invalidURL
+    }
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     return request

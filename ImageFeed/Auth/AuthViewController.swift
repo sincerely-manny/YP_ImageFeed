@@ -73,7 +73,7 @@ extension AuthViewController: WebViewViewControllerDelegate {
         transitionToViewController(controllerIdentifier: "MainTabbarController")
       case .failure(let error):
         //TODO: Handle error
-        print("Error fetching access token: \(error)")
+        print("❌ Error fetching access token: \(error)")
       }
     }
   }
