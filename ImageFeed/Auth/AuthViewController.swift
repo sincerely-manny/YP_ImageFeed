@@ -1,4 +1,3 @@
-import ProgressHUD
 import UIKit
 
 final class AuthViewController: UIViewController {
@@ -68,9 +67,9 @@ final class AuthViewController: UIViewController {
 
 extension AuthViewController: WebViewViewControllerDelegate {
   func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
-    ProgressHUD.animate()
+    UIBlockingProgressHUD.show()
     OAuth2Service.shared.getAccessToken(code: code) { result in
-      ProgressHUD.dismiss()
+      UIBlockingProgressHUD.dismiss()
       switch result {
       case .success(_):
         transitionToViewController(controllerIdentifier: "MainTabbarController")

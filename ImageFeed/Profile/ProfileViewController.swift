@@ -1,11 +1,39 @@
 import UIKit
 
 final class ProfileViewController: UIViewController {
+  private let profileService = ProfileService()
+  private var header = UIView()
+  private var avatar = UIImageView()
+  private var nameLabel = UILabel()
+  private var tagLabel = UILabel()
+  private var bioLabel = UILabel()
+
+  private var user: Profile? {
+    didSet {
+      guard let user = user else { return }
+      setupName(parentView: header, topAnchor: avatar.bottomAnchor, text: user.name)
+      setupTag(
+        parentView: header, topAnchor: nameLabel.bottomAnchor, text: user.loginName)
+      setupBio(
+        parentView: header, topAnchor: tagLabel.bottomAnchor, text: user.bio ?? " ")
+    }
+  }
+
   override func viewDidLoad() {
     super.viewDidLoad()
     setupView()
-    let header = setupHeader()
+    setupHeader()
     setupFavorites(topAnchor: header.bottomAnchor)
+    profileService.fetchProfile { [weak self] result in
+      UIBlockingProgressHUD.show()
+      switch result {
+      case .success(let profile):
+        self?.user = profile
+      case .failure(let error):
+        print("Error fetching profile: \(error)")
+      }
+      UIBlockingProgressHUD.dismiss()
+    }
   }
 
   // MARK: - Setup subviews
@@ -15,9 +43,7 @@ final class ProfileViewController: UIViewController {
   }
 
   // MARK: - Header
-  private func setupHeader() -> UIView {
-    let header = UIView()
-
+  private func setupHeader() {
     header.translatesAutoresizingMaskIntoConstraints = false
     header.layoutMargins = .zero
     view.addSubview(header)
@@ -29,17 +55,18 @@ final class ProfileViewController: UIViewController {
     ])
 
     let avatar = setupAvatar(parentView: header)
+    setupName(parentView: header, topAnchor: avatar.bottomAnchor, text: " ")
+    setupTag(
+      parentView: header, topAnchor: nameLabel.bottomAnchor, text: " ")
+    setupBio(
+      parentView: header, topAnchor: tagLabel.bottomAnchor, text: " ")
     setupExitButton(parentView: header, centerYAnchor: avatar.centerYAnchor)
-    let nameLabel = setupName(parentView: header, topAnchor: avatar.bottomAnchor)
-    let tagLabel = setupTag(parentView: header, topAnchor: nameLabel.bottomAnchor)
-    setupStatus(parentView: header, topAnchor: tagLabel.bottomAnchor)
 
-    return header
   }
 
   // MARK: - Avatar
   private func setupAvatar(parentView view: UIView) -> UIImageView {
-    let avatar = UIImageView()
+    avatar = UIImageView()
 
     avatar.contentMode = .scaleAspectFill
     avatar.layer.cornerRadius = 35
@@ -79,8 +106,8 @@ final class ProfileViewController: UIViewController {
   }
 
   // MARK: - Name
-  private func setupName(parentView view: UIView, topAnchor: NSLayoutYAxisAnchor) -> UILabel {
-    let label = UILabel()
+  private func setupName(parentView view: UIView, topAnchor: NSLayoutYAxisAnchor, text: String) {
+    let label = nameLabel
 
     label.textColor = .ypWhite
     let letterSpacing: CGFloat = -0.08
@@ -92,7 +119,7 @@ final class ProfileViewController: UIViewController {
       .foregroundColor: UIColor.ypWhite,
       .paragraphStyle: paragraphStyle,
     ]
-    label.attributedText = NSAttributedString(string: "Екатерина Новикова", attributes: attributes)
+    label.attributedText = NSAttributedString(string: text, attributes: attributes)
 
     label.translatesAutoresizingMaskIntoConstraints = false
     view.addSubview(label)
@@ -101,19 +128,18 @@ final class ProfileViewController: UIViewController {
       label.topAnchor.constraint(equalTo: topAnchor, constant: 8),
       label.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
     ])
-    return label
   }
 
   // MARK: - Tag
-  private func setupTag(parentView view: UIView, topAnchor: NSLayoutYAxisAnchor) -> UILabel {
-    let label = UILabel()
+  private func setupTag(parentView view: UIView, topAnchor: NSLayoutYAxisAnchor, text: String) {
+    let label = tagLabel
 
     label.baselineAdjustment = .alignCenters
     let attributes: [NSAttributedString.Key: Any] = [
       .font: UIFont.systemFont(ofSize: 13, weight: .regular),
       .foregroundColor: UIColor.ypGray,
     ]
-    label.attributedText = NSAttributedString(string: "@ekaterina_nov", attributes: attributes)
+    label.attributedText = NSAttributedString(string: text, attributes: attributes)
 
     label.translatesAutoresizingMaskIntoConstraints = false
     view.addSubview(label)
@@ -123,12 +149,11 @@ final class ProfileViewController: UIViewController {
       label.topAnchor.constraint(equalTo: topAnchor, constant: 8),
       label.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
     ])
-    return label
   }
 
   // MARK: - Status
-  private func setupStatus(parentView view: UIView, topAnchor: NSLayoutYAxisAnchor) {
-    let label = UILabel()
+  private func setupBio(parentView view: UIView, topAnchor: NSLayoutYAxisAnchor, text: String) {
+    let label = bioLabel
 
     label.textColor = .ypWhite
     label.baselineAdjustment = .alignCenters
@@ -137,7 +162,7 @@ final class ProfileViewController: UIViewController {
       .font: UIFont.systemFont(ofSize: 13, weight: .regular),
       .foregroundColor: UIColor.ypWhite,
     ]
-    label.attributedText = NSAttributedString(string: "Hello, world!", attributes: attributes)
+    label.attributedText = NSAttributedString(string: text, attributes: attributes)
 
     label.translatesAutoresizingMaskIntoConstraints = false
     view.addSubview(label)
