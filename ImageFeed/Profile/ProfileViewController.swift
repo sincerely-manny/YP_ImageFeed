@@ -1,7 +1,7 @@
 import UIKit
 
 final class ProfileViewController: UIViewController {
-  private let profileService = ProfileService()
+  private let profileService = ProfileService.shared
   private var header = UIView()
   private var avatar = UIImageView()
   private var nameLabel = UILabel()
@@ -19,20 +19,36 @@ final class ProfileViewController: UIViewController {
     }
   }
 
+  private var profileImageServiceObserver: NSObjectProtocol?
+
   override func viewDidLoad() {
     super.viewDidLoad()
     setupView()
     setupHeader()
     setupFavorites(topAnchor: header.bottomAnchor)
-    profileService.fetchProfile { [weak self] result in
-      UIBlockingProgressHUD.show()
-      switch result {
-      case .success(let profile):
-        self?.user = profile
-      case .failure(let error):
-        print("Error fetching profile: \(error)")
+    user = profileService.profile
+
+    profileImageServiceObserver = NotificationCenter.default
+      .addObserver(
+        forName: profileService.didChangeProfileImageNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        guard let self = self else { return }
+        self.updateAvatar()
       }
-      UIBlockingProgressHUD.dismiss()
+
+    updateAvatar()
+
+  }
+
+  private func updateAvatar() {
+    guard let profile = profileService.profile else { return }
+    if let url = profile.avatar {
+      print("⚠️⚠️⚠️ Avatar URL: \(url)")
+      // TODO: - Add image loading from URL
+    } else {
+      avatar.image = UIImage(named: "0")
     }
   }
 

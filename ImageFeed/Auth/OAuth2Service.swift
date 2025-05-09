@@ -19,16 +19,16 @@ final class OAuth2Service {
   private var task: URLSessionTask?
   private var lastCode: String?
 
-  private init() {}
-  var accessToken: String? {
-    retrieveAccessToken()
-  }
-
   private lazy var decoder: JSONDecoder = {
     let decoder = JSONDecoder()
     decoder.keyDecodingStrategy = .convertFromSnakeCase
     return decoder
   }()
+
+  private init() {}
+  var accessToken: String? {
+    retrieveAccessToken()
+  }
 
   func getAccessToken(code: String, completion: @escaping (Result<Bool, Error>) -> Void) {
     assert(Thread.isMainThread)
@@ -51,7 +51,7 @@ final class OAuth2Service {
     lastCode = code
 
     task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-      DispatchQueue.main.async {
+      DispatchQueue.main.async { [weak self] in
         if let error = error {
           print("Error fetching access token: \(error)")
           completion(.failure(error))

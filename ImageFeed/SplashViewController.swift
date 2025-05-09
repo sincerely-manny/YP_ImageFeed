@@ -13,8 +13,24 @@ final class SplashViewController: UIViewController {
 
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
-    transitionToViewController(
-      controllerIdentifier: authService.isLoggedIn() ? "MainTabbarController" : "AuthNavController")
+    let isLoggedIn = authService.isLoggedIn()
+
+    if isLoggedIn {
+      let profileService = ProfileService.shared
+      profileService.fetchProfile { result in
+        DispatchQueue.main.async {
+          switch result {
+          case .success:
+            transitionToViewController(controllerIdentifier: "MainTabbarController")
+          case .failure(let error):
+            print("Error fetching profile: \(error)")
+            transitionToViewController(controllerIdentifier: "AuthNavController")
+          }
+        }
+      }
+    } else {
+      transitionToViewController(controllerIdentifier: "AuthNavController")
+    }
   }
 
   private func loadLaunchScreenView() {
