@@ -1,6 +1,8 @@
 import Foundation
 
-let ACCESS_TOKEN_STORED_KEY = "unsplashAccessToken"
+enum ConstansKeys {
+  static let accessToken = "unsplashAccessToken"
+}
 
 enum OAuth2Error: Error {
   case invalidURL
@@ -70,21 +72,21 @@ final class OAuth2Service {
       throw OAuth2Error.invalidURL
     }
     var request = URLRequest(url: url)
-    request.httpMethod = "POST"
+    request.httpMethod = HTTPMethod.post.rawValue
     return request
   }
 
   private func storeAccessToken(_ token: String) {
     // TODO: Store the access token securely
-    UserDefaults.standard.set(token, forKey: ACCESS_TOKEN_STORED_KEY)
+    UserDefaults.standard.set(token, forKey: ConstansKeys.accessToken)
   }
 
   private func retrieveAccessToken() -> String? {
-    UserDefaults.standard.string(forKey: ACCESS_TOKEN_STORED_KEY)
+    UserDefaults.standard.string(forKey: ConstansKeys.accessToken)
   }
 
   private func clearAccessToken() {
-    UserDefaults.standard.removeObject(forKey: ACCESS_TOKEN_STORED_KEY)
+    UserDefaults.standard.removeObject(forKey: ConstansKeys.accessToken)
   }
 
   func isLoggedIn() -> Bool {
@@ -96,11 +98,4 @@ final class OAuth2Service {
     transitionToViewController(viewController: SplashViewController())
   }
 
-}
-
-struct OAuthTokenResponseBody: Decodable {
-  let accessToken: String
-  let tokenType: String
-  let scope: String
-  let createdAt: Int
 }

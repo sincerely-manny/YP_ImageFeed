@@ -69,7 +69,7 @@ extension AuthViewController: WebViewViewControllerDelegate {
   func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
     OAuth2Service.shared.getAccessToken(code: code) { result in
       switch result {
-      case .success(_):
+      case .success:
         transitionToViewController(controllerIdentifier: "MainTabbarController")
       case .failure(let error):
         //TODO: Handle error
