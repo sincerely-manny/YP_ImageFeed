@@ -15,6 +15,12 @@ final class OAuth2Service {
     retrieveAccessToken()
   }
 
+  private lazy var decoder: JSONDecoder = {
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    return decoder
+  }()
+
   func getAccessToken(code: String, completion: @escaping (Result<Bool, Error>) -> Void) {
     var request: URLRequest
     do {
@@ -28,7 +34,7 @@ final class OAuth2Service {
       switch result {
       case .success(let data):
         do {
-          let tokenResponse = try JSONDecoder().decode(OAuthTokenResponseBody.self, from: data)
+          let tokenResponse = try self.decoder.decode(OAuthTokenResponseBody.self, from: data)
           let accessToken = tokenResponse.accessToken
           self.storeAccessToken(accessToken)
           completion(.success(true))
@@ -85,6 +91,11 @@ final class OAuth2Service {
     retrieveAccessToken() != nil
   }
 
+  func logout() {
+    clearAccessToken()
+    transitionToViewController(viewController: SplashViewController())
+  }
+
 }
 
 struct OAuthTokenResponseBody: Decodable {
@@ -92,11 +103,4 @@ struct OAuthTokenResponseBody: Decodable {
   let tokenType: String
   let scope: String
   let createdAt: Int
-
-  enum CodingKeys: String, CodingKey {
-    case accessToken = "access_token"
-    case tokenType = "token_type"
-    case scope
-    case createdAt = "created_at"
-  }
 }
