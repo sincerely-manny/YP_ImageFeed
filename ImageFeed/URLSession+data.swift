@@ -54,7 +54,8 @@ extension URLSession {
           let object = try decoder.decode(T.self, from: data)
           completion(.success(object))
         } catch {
-          print("❌ Error decoding object: \(error)")
+          print(
+            "❌ Error decoding object: \(error), data: \(String(data: data, encoding: .utf8) ?? "")")
           completion(.failure(error))
         }
       case .failure(let error):

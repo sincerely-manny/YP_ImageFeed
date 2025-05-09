@@ -59,7 +59,7 @@ final class OAuth2Service {
           self?.storeAccessToken(accessToken)
           completion(.success(true))
         case .failure(let error):
-          print("Error fetching access token: \(error)")
+          print("❌ [OAuth2Service] Error fetching access token: \(error)")
           completion(.failure(error))
         }
         self?.task = nil

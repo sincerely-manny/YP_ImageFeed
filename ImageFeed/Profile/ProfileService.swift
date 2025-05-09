@@ -34,7 +34,7 @@ final class ProfileService {
           self.profile = profile
           completion(.success(profile))
         case .failure(let error):
-          print("❌ Error fetching profile: \(error)")
+          print("❌ [ProfileService] Error fetching profile: \(error)")
           completion(.failure(error))
         }
       }

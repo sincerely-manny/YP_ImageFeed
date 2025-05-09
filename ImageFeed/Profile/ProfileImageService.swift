@@ -31,7 +31,7 @@ final class ProfileImageService {
           }
           completion(.success(profileImageURL))
         case .failure(let error):
-          print("Error fetching profile image URL: \(error)")
+          print("❌ [ProfileImageService] Error fetching profile image URL: \(error)")
           completion(.failure(error))
         }
       }
