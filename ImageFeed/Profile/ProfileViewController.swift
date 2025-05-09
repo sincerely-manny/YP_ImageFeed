@@ -1,4 +1,8 @@
+import Kingfisher
 import UIKit
+
+let profilePlaceholderImage = UIImage(systemName: "person.crop.circle")?.withTintColor(
+  .ypGray, renderingMode: .alwaysOriginal)
 
 final class ProfileViewController: UIViewController {
   private let profileService = ProfileService.shared
@@ -46,9 +50,16 @@ final class ProfileViewController: UIViewController {
     guard let profile = profileService.profile else { return }
     if let url = profile.avatar {
       print("⚠️⚠️⚠️ Avatar URL: \(url)")
-      // TODO: - Add image loading from URL
+      avatar.kf.setImage(
+        with: url,
+        placeholder: profilePlaceholderImage,
+        options: [
+          .transition(.fade(0.2)),
+          .cacheOriginalImage,
+        ]
+      )
     } else {
-      avatar.image = UIImage(named: "0")
+      avatar.image = profilePlaceholderImage
     }
   }
 
@@ -88,7 +99,7 @@ final class ProfileViewController: UIViewController {
     avatar.layer.cornerRadius = 35
     avatar.layer.masksToBounds = true
     avatar.translatesAutoresizingMaskIntoConstraints = false
-    avatar.image = UIImage(named: "0")
+    avatar.image = profilePlaceholderImage
     view.addSubview(avatar)
 
     NSLayoutConstraint.activate([
@@ -97,6 +108,8 @@ final class ProfileViewController: UIViewController {
       avatar.widthAnchor.constraint(equalToConstant: 70),
       avatar.heightAnchor.constraint(equalToConstant: 70),
     ])
+
+    avatar.kf.indicatorType = .activity
     return avatar
   }
 
