@@ -50,28 +50,23 @@ final class OAuth2Service {
     task?.cancel()
     lastCode = code
 
-    task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+    task = URLSession.shared.objectTask(for: request) {
+      [weak self] (result: Result<OAuthTokenResponseBody, Error>) in
       DispatchQueue.main.async { [weak self] in
-        if let error = error {
+        switch result {
+        case .success(let tokenResponse):
+          let accessToken = tokenResponse.accessToken
+          self?.storeAccessToken(accessToken)
+          completion(.success(true))
+        case .failure(let error):
           print("Error fetching access token: \(error)")
           completion(.failure(error))
-        } else if let data = data, let self = self {
-          do {
-            let tokenResponse = try self.decoder.decode(OAuthTokenResponseBody.self, from: data)
-            let accessToken = tokenResponse.accessToken
-            self.storeAccessToken(accessToken)
-            completion(.success(true))
-          } catch {
-            print("Error decoding token response: \(error)")
-            completion(.failure(error))
-          }
-        } else {
-          completion(.failure(AuthServiceError.invalidRequest))
         }
         self?.task = nil
         self?.lastCode = nil
       }
     }
+
     task?.resume()
   }
 

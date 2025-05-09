@@ -20,23 +20,19 @@ final class ProfileImageService {
       completion(.failure(ProfileImageError.invalidURL))
       return
     }
-    URLSession.shared.dataTask(with: request) { data, response, error in
+
+    URLSession.shared.objectTask(for: request) { (result: Result<PublicProfileResult, Error>) in
       DispatchQueue.main.async {
-        if let error = error {
+        switch result {
+        case .success(let profileResult):
+          guard let profileImageURL = profileResult.profileImage?.large else {
+            completion(.failure(ProfileImageError.invalidResponse))
+            return
+          }
+          completion(.success(profileImageURL))
+        case .failure(let error):
           print("Error fetching profile image URL: \(error)")
           completion(.failure(error))
-        } else if let data = data {
-          do {
-            let profileResult = try self.decoder.decode(PublicProfileResult.self, from: data)
-            guard let profileImageURL = profileResult.profileImage?.large else {
-              completion(.failure(ProfileImageError.invalidResponse))
-              return
-            }
-            completion(.success(profileImageURL))
-          } catch {
-            print("Error decoding profile image URL response: \(error)")
-            completion(.failure(error))
-          }
         }
       }
     }.resume()
