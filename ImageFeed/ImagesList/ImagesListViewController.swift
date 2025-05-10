@@ -95,10 +95,16 @@ extension ImagesListViewController: UITableViewDataSource {
       let image = cell.photo
     else { return }
     let fullscreenVC = SingleImageViewController()
-    fullscreenVC.configureImageView(with: image)
+    fullscreenVC.configureImageView(with: image, placeholder: cell.thumbnailView.image)
     fullscreenVC.modalPresentationStyle = .fullScreen
-    fullscreenVC.modalTransitionStyle = .crossDissolve
-    present(fullscreenVC, animated: true)
+
+    let transition = CATransition()
+    transition.duration = 0.3
+    transition.type = .reveal
+    transition.subtype = .fromBottom
+    view.window?.layer.add(transition, forKey: kCATransition)
+
+    present(fullscreenVC, animated: false)
   }
 
   func tableView(

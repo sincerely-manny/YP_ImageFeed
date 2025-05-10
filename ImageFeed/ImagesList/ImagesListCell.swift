@@ -15,10 +15,10 @@ final class ImagesListCell: UITableViewCell {
   static let reuseIdentifier = "ImagesListCell"
 
   var photo: Photo? = nil
+  let thumbnailView = UIImageView()
   // MARK: - Private Properties
   private let style = ImageListCellStyle(gap: 8, paddingHorizontal: 16)
 
-  private let thumbnailView = UIImageView()
   private let heartButton = UIButton()
   private let labelContainerView = GradientView()
   private let labelView = UILabel()

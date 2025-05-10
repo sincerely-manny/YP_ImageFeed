@@ -48,11 +48,19 @@ final class SingleImageViewController: UIViewController {
 
   // MARK: - Public methods
 
-  func configureImageView(with image: Photo) {
+  func configureImageView(with image: Photo, placeholder: UIImage?) {
+    let blurredPlaceholder: UIImage?
+    if let placeholderToBlur = placeholder {
+      let processor = BlurImageProcessor(blurRadius: 2)
+      blurredPlaceholder = processor.process(item: .image(placeholderToBlur), options: .init([]))
+    } else {
+      blurredPlaceholder = nil
+    }
+
     imageView.kf.indicatorType = .activity
-    imageView.kf.setImage(
+    self.imageView.kf.setImage(
       with: URL(string: image.largeImageURL),
-      placeholder: ImageListCellConstants.placeholderImage,
+      placeholder: blurredPlaceholder ?? UIImage(named: "card_stub"),
       options: [
         .transition(.fade(0.2)),
         .cacheOriginalImage,
@@ -192,7 +200,12 @@ final class SingleImageViewController: UIViewController {
   }
 
   @objc private func didTapBackButton() {
-    dismiss(animated: true)
+    let transition = CATransition()
+    transition.duration = 0.3
+    transition.type = .reveal
+    transition.subtype = .fromBottom
+    view.window?.layer.add(transition, forKey: kCATransition)
+    dismiss(animated: false)
   }
 
   @objc private func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
