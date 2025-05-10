@@ -46,11 +46,12 @@ final class ImagesListService {
               ),
               createdAt: DateFormatter().date(from: decodedPhoto.createdAt),
               welcomeDescription: decodedPhoto.description,
-              thumbImageURL: decodedPhoto.urls.thumb,
+              thumbImageURL: decodedPhoto.urls.regular,
               largeImageURL: decodedPhoto.urls.full,
               isLiked: decodedPhoto.likedByUser
             )
             self?.photos.append(photo)
+            print("URLS: \(decodedPhoto.urls)")
             isChanged = true
           }
           if isChanged {

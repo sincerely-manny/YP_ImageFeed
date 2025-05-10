@@ -1,3 +1,4 @@
+import Kingfisher
 import LinkPresentation
 import UIKit
 
@@ -47,8 +48,16 @@ final class SingleImageViewController: UIViewController {
 
   // MARK: - Public methods
 
-  func configureImageView(with image: UIImage) {
-    imageView.image = image
+  func configureImageView(with image: Photo) {
+    imageView.kf.indicatorType = .activity
+    imageView.kf.setImage(
+      with: URL(string: image.largeImageURL),
+      placeholder: ImageListCellConstants.placeholderImage,
+      options: [
+        .transition(.fade(0.2)),
+        .cacheOriginalImage,
+      ]
+    )
   }
 
   // MARK: - Private methods

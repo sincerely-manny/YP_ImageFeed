@@ -92,7 +92,7 @@ extension ImagesListViewController: UITableViewDataSource {
 
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     guard let cell = tableView.cellForRow(at: indexPath) as? ImagesListCell,
-      let image = cell.thumbnailView.image as UIImage?
+      let image = cell.photo
     else { return }
     let fullscreenVC = SingleImageViewController()
     fullscreenVC.configureImageView(with: image)

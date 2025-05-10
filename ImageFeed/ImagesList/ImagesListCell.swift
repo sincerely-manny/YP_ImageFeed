@@ -14,10 +14,11 @@ enum ImageListCellConstants {
 final class ImagesListCell: UITableViewCell {
   static let reuseIdentifier = "ImagesListCell"
 
+  var photo: Photo? = nil
   // MARK: - Private Properties
   private let style = ImageListCellStyle(gap: 8, paddingHorizontal: 16)
 
-  let thumbnailView = UIImageView()
+  private let thumbnailView = UIImageView()
   private let heartButton = UIButton()
   private let labelContainerView = GradientView()
   private let labelView = UILabel()
@@ -56,6 +57,7 @@ final class ImagesListCell: UITableViewCell {
 
   // MARK: - UI Updates
   func configure(with image: Photo, date: Date = Date()) {
+    self.photo = image
     let text = image.createdAt != nil ? dateFormatter.string(from: image.createdAt ?? Date()) : ""
     setLabelText(text)
     let aspectRatio = image.size.height / image.size.width
@@ -65,7 +67,7 @@ final class ImagesListCell: UITableViewCell {
     aspectRatioConstraint?.isActive = true
     thumbnailView.kf.indicatorType = .activity
     thumbnailView.kf.setImage(
-      with: URL(string: image.largeImageURL),
+      with: URL(string: image.thumbImageURL),
       placeholder: ImageListCellConstants.placeholderImage,
       options: [
         .transition(.fade(0.2)),
