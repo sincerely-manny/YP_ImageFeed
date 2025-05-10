@@ -1,5 +1,4 @@
 import Foundation
-import UIKit
 
 final class ProfileService {
   static let shared = ProfileService()
@@ -24,7 +23,7 @@ final class ProfileService {
         guard let self = self else { return }
         switch result {
         case .success(let profileResult):
-          self.fecthProfileImageURL(username: profileResult.username)
+          self.fetchProfileImageURL(username: profileResult.username)
           let profile = Profile(
             username: profileResult.username,
             name: "\(profileResult.firstName ?? "") \(profileResult.lastName ?? "")",
@@ -42,8 +41,10 @@ final class ProfileService {
     }.resume()
   }
 
-  func fetchProfileAndTransiton(to controllerIdentifier: String, completion: ((Error?) -> Void)? = nil) {
-    self.fetchProfile { result in
+  func fetchProfileAndTransition(
+    to controllerIdentifier: String, completion: ((Error?) -> Void)? = nil
+  ) {
+    fetchProfile { result in
       DispatchQueue.main.async {
         switch result {
         case .success:
@@ -57,10 +58,11 @@ final class ProfileService {
     }
   }
 
-  private func fecthProfileImageURL(username: String) {
+  private func fetchProfileImageURL(username: String) {
     let service = ProfileImageService()
     var profileImageURL: URL?
-    service.fetchProfileImageURL(username: username) { result in
+    service.fetchProfileImageURL(username: username) { [weak self] result in
+      guard let self = self else { return }
       switch result {
       case .success(let url):
         profileImageURL = URL(string: url)

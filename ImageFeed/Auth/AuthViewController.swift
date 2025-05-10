@@ -68,23 +68,22 @@ final class AuthViewController: UIViewController {
 extension AuthViewController: WebViewViewControllerDelegate {
   func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
     UIBlockingProgressHUD.show()
-    OAuth2Service.shared.getAccessToken(code: code) { result in
+    OAuth2Service.shared.getAccessToken(code: code) { [weak self] result in
       UIBlockingProgressHUD.dismiss()
       switch result {
       case .success:
-        ProfileService.shared.fetchProfileAndTransiton(to: "MainTabbarController") { error in
+        ProfileService.shared.fetchProfileAndTransition(to: "MainTabbarController") { error in
           if let error = error {
-            print("❌ Error in fetchProfileAndTransiton: \(error)")
+            print("❌ Error in fetchProfileAndTransition: \(error)")
             let alert = UIAlertController(
               title: "Ошибка",
               message: "Не удалось загрузить профиль",
               preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-            self.present(alert, animated: true, completion: nil)
+            self?.present(alert, animated: true, completion: nil)
           }
         }
       case .failure(let error):
-        //TODO: Handle error
         print("❌ Error fetching access token: \(error)")
 
         let alert = UIAlertController(
@@ -92,8 +91,7 @@ extension AuthViewController: WebViewViewControllerDelegate {
           message: "Не удалось войти в систему",
           preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-        self.present(alert, animated: true, completion: nil)
-
+        self?.present(alert, animated: true, completion: nil)
       }
     }
   }
