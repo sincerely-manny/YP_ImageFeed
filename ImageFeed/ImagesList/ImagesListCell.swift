@@ -1,3 +1,4 @@
+import Kingfisher
 import UIKit
 
 // MARK: - Style
@@ -49,17 +50,23 @@ final class ImagesListCell: UITableViewCell {
   }
 
   // MARK: - UI Updates
-  func configure(with image: UIImage?, date: Date = Date()) {
-    thumbnailView.image = image
-    let text = dateFormatter.string(from: date)
+  func configure(with image: Photo, date: Date = Date()) {
+    let text = image.createdAt != nil ? dateFormatter.string(from: image.createdAt ?? Date()) : ""
     setLabelText(text)
-    if let image = image {
-      let aspectRatio = image.size.height / image.size.width
-      aspectRatioConstraint?.isActive = false
-      aspectRatioConstraint = thumbnailView.heightAnchor.constraint(
-        equalTo: thumbnailView.widthAnchor, multiplier: aspectRatio)
-      aspectRatioConstraint?.isActive = true
-    }
+    let aspectRatio = image.size.height / image.size.width
+    aspectRatioConstraint?.isActive = false
+    aspectRatioConstraint = thumbnailView.heightAnchor.constraint(
+      equalTo: thumbnailView.widthAnchor, multiplier: aspectRatio)
+    aspectRatioConstraint?.isActive = true
+
+    thumbnailView.kf.setImage(
+      with: URL(string: image.largeImageURL),
+      placeholder: UIImage(named: "placeholder"),
+      options: [
+        .transition(.fade(0.2)),
+        .cacheOriginalImage,
+      ]
+    )
 
     setNeedsLayout()
     layoutIfNeeded()
@@ -96,7 +103,8 @@ final class ImagesListCell: UITableViewCell {
       thumbnailView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
       thumbnailView.trailingAnchor.constraint(
         equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-      thumbnailView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor)
+      thumbnailView.bottomAnchor.constraint(
+        lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor),
     ])
   }
 

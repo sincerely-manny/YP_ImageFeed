@@ -1,6 +1,9 @@
 import UIKit
 
 final class ImagesListViewController: UIViewController {
+  private let imagesListService = ImagesListService()
+  private var photosObserver: NSObjectProtocol?
+
   private lazy var tableView = {
     let tableView = UITableView(frame: .zero, style: .plain)
     tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -17,6 +20,18 @@ final class ImagesListViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     setupTableView()
+
+    photosObserver = NotificationCenter.default
+      .addObserver(
+        forName: ImagesListService.didChangeNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        guard let self = self else { return }
+        self.tableView.reloadData()
+      }
+
+    imagesListService.fetchPhotosNextPage()
   }
 
   private func setupTableView() {
@@ -43,7 +58,7 @@ final class ImagesListViewController: UIViewController {
 // MARK: - Extension DataSource
 extension ImagesListViewController: UITableViewDataSource {
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    19
+    imagesListService.photos.count
   }
 
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -56,9 +71,12 @@ extension ImagesListViewController: UITableViewDataSource {
       return UITableViewCell()
     }
 
-    let image = UIImage(named: "\(indexPath.row)")
-    imageListCell.configure(with: image)
-    imageListCell.setIsLiked(indexPath.row % 2 == 0)
+    //let image = UIImage(named: "\(indexPath.row)")
+    //imageListCell.configure(with: image)
+    //
+    let photo = imagesListService.photos[indexPath.row]
+    imageListCell.setIsLiked(photo.isLiked)
+    imageListCell.configure(with: photo)
     return imageListCell
   }
 
@@ -71,6 +89,18 @@ extension ImagesListViewController: UITableViewDataSource {
     fullscreenVC.modalPresentationStyle = .fullScreen
     fullscreenVC.modalTransitionStyle = .crossDissolve
     present(fullscreenVC, animated: true)
+  }
+
+  func tableView(
+    _ tableView: UITableView,
+    willDisplay cell: UITableViewCell,
+    forRowAt indexPath: IndexPath
+  ) {
+    print("willDisplay", indexPath.row, imagesListService.photos.count)
+    let lastElement = imagesListService.photos.count - 1
+    if indexPath.row == lastElement {
+      imagesListService.fetchPhotosNextPage()
+    }
   }
 }
 

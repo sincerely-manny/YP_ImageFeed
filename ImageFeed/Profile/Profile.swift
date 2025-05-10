@@ -21,7 +21,7 @@ struct ProfileResult: Codable {
   let totalLikes: Int
   let totalPhotos: Int
   let totalCollections: Int
-  let downloads: Int
+  let downloads: Int?
   let uploadsRemaining: Int
   let instagramUsername: String?
   let email: String?
@@ -56,7 +56,7 @@ struct PublicProfileResult: Codable {
   let totalLikes: Int
   let totalPhotos: Int
   let totalCollections: Int
-  let downloads: Int
+  let downloads: Int?
   let social: SocialLinks
   let profileImage: ProfileImage?
   let badge: Badge?
