@@ -13,7 +13,6 @@ final class ImagesListService {
   func fetchPhotosNextPage() {
     assert(Thread.isMainThread)
     let nextPage = lastLoadedPage + 1
-    print("Fetching photos page \(nextPage)")
     guard
       let request = APIURLRequest.getURLRequest(
         for: "/photos",
@@ -37,7 +36,6 @@ final class ImagesListService {
           var isChanged = false
           for decodedPhoto in photosRes {
             if self?.photos.contains(where: { $0.id == decodedPhoto.id }) == true {
-              print("Photo with id \(decodedPhoto.id) already exists")
               continue
             }
             let photo = Photo(
@@ -61,7 +59,6 @@ final class ImagesListService {
               object: nil
             )
           }
-          print("⚠️ Fetched \(photosRes.count) photos")
         case .failure(let error):
           print("Error fetching photos: \(error)")
         }
