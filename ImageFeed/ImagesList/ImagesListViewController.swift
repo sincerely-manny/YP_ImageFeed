@@ -3,6 +3,7 @@ import UIKit
 final class ImagesListViewController: UIViewController {
   private let imagesListService = ImagesListService()
   private var photosObserver: NSObjectProtocol?
+  private var photosCountRef = 0
 
   private lazy var tableView = {
     let tableView = UITableView(frame: .zero, style: .plain)
@@ -19,6 +20,7 @@ final class ImagesListViewController: UIViewController {
   // MARK: - Lifecycle
   override func viewDidLoad() {
     super.viewDidLoad()
+    photosCountRef = imagesListService.photos.count
     setupTableView()
 
     photosObserver = NotificationCenter.default
@@ -27,11 +29,22 @@ final class ImagesListViewController: UIViewController {
         object: nil,
         queue: .main
       ) { [weak self] _ in
-        guard let self = self else { return }
-        self.tableView.reloadData()
+        self?.updateTableViewAnimated()
       }
 
     imagesListService.fetchPhotosNextPage()
+  }
+
+  private func updateTableViewAnimated() {
+    let newPhotosCount = imagesListService.photos.count
+    let indexPaths = (photosCountRef..<newPhotosCount).map { IndexPath(row: $0, section: 0) }
+    photosCountRef = newPhotosCount
+
+    if indexPaths.isEmpty {
+      tableView.reloadData()
+    } else {
+      tableView.insertRows(at: indexPaths, with: .automatic)
+    }
   }
 
   private func setupTableView() {
@@ -71,9 +84,6 @@ extension ImagesListViewController: UITableViewDataSource {
       return UITableViewCell()
     }
 
-    //let image = UIImage(named: "\(indexPath.row)")
-    //imageListCell.configure(with: image)
-    //
     let photo = imagesListService.photos[indexPath.row]
     imageListCell.setIsLiked(photo.isLiked)
     imageListCell.configure(with: photo)
@@ -96,8 +106,9 @@ extension ImagesListViewController: UITableViewDataSource {
     willDisplay cell: UITableViewCell,
     forRowAt indexPath: IndexPath
   ) {
-    let triggerIndex = ImagesListServiceConstants.pageSize / 2
-    if indexPath.row == triggerIndex {
+    let photosCount = imagesListService.photos.count
+    let middleOfLastPageIndex = photosCount - (ImagesListServiceConstants.pageSize / 2)
+    if indexPath.row == middleOfLastPageIndex {
       imagesListService.fetchPhotosNextPage()
     }
   }

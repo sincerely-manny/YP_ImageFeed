@@ -7,6 +7,10 @@ struct ImageListCellStyle {
   let paddingHorizontal: CGFloat
 }
 
+enum ImageListCellConstants {
+  static let placeholderImage = UIImage(named: "card_stub")
+}
+
 final class ImagesListCell: UITableViewCell {
   static let reuseIdentifier = "ImagesListCell"
 
@@ -45,6 +49,7 @@ final class ImagesListCell: UITableViewCell {
 
   override func prepareForReuse() {
     super.prepareForReuse()
+    thumbnailView.kf.cancelDownloadTask()
     thumbnailView.image = nil
     aspectRatioConstraint?.isActive = false
   }
@@ -58,10 +63,10 @@ final class ImagesListCell: UITableViewCell {
     aspectRatioConstraint = thumbnailView.heightAnchor.constraint(
       equalTo: thumbnailView.widthAnchor, multiplier: aspectRatio)
     aspectRatioConstraint?.isActive = true
-
+    thumbnailView.kf.indicatorType = .activity
     thumbnailView.kf.setImage(
       with: URL(string: image.largeImageURL),
-      placeholder: UIImage(named: "placeholder"),
+      placeholder: ImageListCellConstants.placeholderImage,
       options: [
         .transition(.fade(0.2)),
         .cacheOriginalImage,

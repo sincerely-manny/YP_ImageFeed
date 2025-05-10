@@ -4,8 +4,7 @@ import UIKit
 enum ProfileViewControllerConstants {
   static let avatarSize: CGFloat = 70
   static let avatarCornerRadius: CGFloat = 35
-  static let placeholderImage = UIImage(systemName: "person.crop.circle")?.withTintColor(
-    .ypGray, renderingMode: .alwaysOriginal)
+  static let placeholderImage = UIImage(named: "userpic_stub")
 }
 
 final class ProfileViewController: UIViewController {
