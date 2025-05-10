@@ -96,7 +96,8 @@ extension ImagesListViewController: UITableViewDataSource {
     willDisplay cell: UITableViewCell,
     forRowAt indexPath: IndexPath
   ) {
-    if indexPath.row == ImagesListServiceConstants.pageSize / 2 {
+    let triggerIndex = ImagesListServiceConstants.pageSize / 2
+    if indexPath.row == triggerIndex {
       imagesListService.fetchPhotosNextPage()
     }
   }
