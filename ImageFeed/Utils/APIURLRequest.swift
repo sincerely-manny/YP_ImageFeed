@@ -24,7 +24,7 @@ final class APIURLRequest {
     }
     request.setValue(
       "Bearer \(oauth2Service.accessToken ?? "")", forHTTPHeaderField: "Authorization")
-    request.httpMethod = "GET"
+    request.httpMethod = HTTPMethod.get.rawValue
     return request
   }
 }

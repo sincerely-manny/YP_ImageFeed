@@ -16,9 +16,9 @@ final class SplashViewController: UIViewController {
     let isLoggedIn = authService.isLoggedIn()
 
     if isLoggedIn {
-      ProfileService.shared.fetchProfileAndTransiton(to: "MainTabbarController") { error in
+      ProfileService.shared.fetchProfileAndTransition(to: "MainTabbarController") { error in
         if let error = error {
-          print("Error in fetchProfileAndTransiton: \(error)")
+          print("Error in fetchProfileAndTransition: \(error)")
           transitionToViewController(controllerIdentifier: "AuthNavController")
         }
       }

@@ -1,8 +1,12 @@
 import Kingfisher
 import UIKit
 
-let profilePlaceholderImage = UIImage(systemName: "person.crop.circle")?.withTintColor(
-  .ypGray, renderingMode: .alwaysOriginal)
+enum ProfileViewControllerConstants {
+  static let avatarSize: CGFloat = 70
+  static let avatarCornerRadius: CGFloat = 35
+  static let placeholderImage = UIImage(systemName: "person.crop.circle")?.withTintColor(
+    .ypGray, renderingMode: .alwaysOriginal)
+}
 
 final class ProfileViewController: UIViewController {
   private let profileService = ProfileService.shared
@@ -51,14 +55,14 @@ final class ProfileViewController: UIViewController {
     if let url = profile.avatar {
       avatar.kf.setImage(
         with: url,
-        placeholder: profilePlaceholderImage,
+        placeholder: ProfileViewControllerConstants.placeholderImage,
         options: [
           .transition(.fade(0.2)),
           .cacheOriginalImage,
         ]
       )
     } else {
-      avatar.image = profilePlaceholderImage
+      avatar.image = ProfileViewControllerConstants.placeholderImage
     }
   }
 
@@ -95,17 +99,17 @@ final class ProfileViewController: UIViewController {
     avatar = UIImageView()
 
     avatar.contentMode = .scaleAspectFill
-    avatar.layer.cornerRadius = 35
+    avatar.layer.cornerRadius = ProfileViewControllerConstants.avatarCornerRadius
     avatar.layer.masksToBounds = true
     avatar.translatesAutoresizingMaskIntoConstraints = false
-    avatar.image = profilePlaceholderImage
+    avatar.image = ProfileViewControllerConstants.placeholderImage
     view.addSubview(avatar)
 
     NSLayoutConstraint.activate([
       avatar.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
       avatar.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-      avatar.widthAnchor.constraint(equalToConstant: 70),
-      avatar.heightAnchor.constraint(equalToConstant: 70),
+      avatar.widthAnchor.constraint(equalToConstant: ProfileViewControllerConstants.avatarSize),
+      avatar.heightAnchor.constraint(equalToConstant: ProfileViewControllerConstants.avatarSize),
     ])
 
     avatar.kf.indicatorType = .activity
