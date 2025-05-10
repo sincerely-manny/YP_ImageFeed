@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 final class ProfileService {
   static let shared = ProfileService()
@@ -39,6 +40,21 @@ final class ProfileService {
         }
       }
     }.resume()
+  }
+
+  func fetchProfileAndTransiton(to controllerIdentifier: String, completion: ((Error?) -> Void)? = nil) {
+    self.fetchProfile { result in
+      DispatchQueue.main.async {
+        switch result {
+        case .success:
+          transitionToViewController(controllerIdentifier: controllerIdentifier)
+          completion?(nil)
+        case .failure(let error):
+          print("Error fetching profile: \(error)")
+          completion?(error)
+        }
+      }
+    }
   }
 
   private func fecthProfileImageURL(username: String) {

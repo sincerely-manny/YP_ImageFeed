@@ -72,7 +72,17 @@ extension AuthViewController: WebViewViewControllerDelegate {
       UIBlockingProgressHUD.dismiss()
       switch result {
       case .success:
-        transitionToViewController(controllerIdentifier: "MainTabbarController")
+        ProfileService.shared.fetchProfileAndTransiton(to: "MainTabbarController") { error in
+          if let error = error {
+            print("❌ Error in fetchProfileAndTransiton: \(error)")
+            let alert = UIAlertController(
+              title: "Ошибка",
+              message: "Не удалось загрузить профиль",
+              preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+            self.present(alert, animated: true, completion: nil)
+          }
+        }
       case .failure(let error):
         //TODO: Handle error
         print("❌ Error fetching access token: \(error)")

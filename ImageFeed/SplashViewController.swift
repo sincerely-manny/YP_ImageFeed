@@ -16,16 +16,10 @@ final class SplashViewController: UIViewController {
     let isLoggedIn = authService.isLoggedIn()
 
     if isLoggedIn {
-      let profileService = ProfileService.shared
-      profileService.fetchProfile { result in
-        DispatchQueue.main.async {
-          switch result {
-          case .success:
-            transitionToViewController(controllerIdentifier: "MainTabbarController")
-          case .failure(let error):
-            print("Error fetching profile: \(error)")
-            transitionToViewController(controllerIdentifier: "AuthNavController")
-          }
+      ProfileService.shared.fetchProfileAndTransiton(to: "MainTabbarController") { error in
+        if let error = error {
+          print("Error in fetchProfileAndTransiton: \(error)")
+          transitionToViewController(controllerIdentifier: "AuthNavController")
         }
       }
     } else {

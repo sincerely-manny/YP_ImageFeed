@@ -49,7 +49,6 @@ final class ProfileViewController: UIViewController {
   private func updateAvatar() {
     guard let profile = profileService.profile else { return }
     if let url = profile.avatar {
-      print("⚠️⚠️⚠️ Avatar URL: \(url)")
       avatar.kf.setImage(
         with: url,
         placeholder: profilePlaceholderImage,
