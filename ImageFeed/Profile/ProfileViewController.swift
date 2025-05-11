@@ -201,13 +201,16 @@ final class ProfileViewController: UIViewController {
     ])
   }
 
-  // MARK: - Status
+  // MARK: - Bio
   private func setupBio(parentView view: UIView, topAnchor: NSLayoutYAxisAnchor, text: String) {
     let label = bioLabel
 
     label.textColor = .ypWhite
     label.baselineAdjustment = .alignCenters
     label.numberOfLines = 1
+    label.lineBreakMode = .byTruncatingTail
+    label.text = text
+
     let attributes: [NSAttributedString.Key: Any] = [
       .font: UIFont.systemFont(ofSize: 13, weight: .regular),
       .foregroundColor: UIColor.ypWhite,
@@ -221,6 +224,7 @@ final class ProfileViewController: UIViewController {
       label.heightAnchor.constraint(equalToConstant: 18),
       label.topAnchor.constraint(equalTo: topAnchor, constant: 8),
       label.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+      label.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
       label.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
     ])
   }
