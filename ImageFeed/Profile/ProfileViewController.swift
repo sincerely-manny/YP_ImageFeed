@@ -139,7 +139,20 @@ final class ProfileViewController: UIViewController {
   }
 
   @objc private func exitButtonTapped() {
-    OAuth2Service.shared.logout()
+    let alert = UIAlertController(
+      title: "Пока, пока!",
+      message: "Уверены что хотите выйти?",
+      preferredStyle: .alert
+    )
+    let cancelAction = UIAlertAction(title: "Нет", style: .cancel)
+    let okAction = UIAlertAction(title: "Да", style: .default) { [weak self] _ in
+      guard let self = self else { return }
+      OAuth2Service.shared.logout()
+      self.dismiss(animated: true)
+    }
+    alert.addAction(okAction)
+    alert.addAction(cancelAction)
+    present(alert, animated: true)
   }
 
   // MARK: - Name
