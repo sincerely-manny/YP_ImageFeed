@@ -29,7 +29,7 @@ final class SingleImageViewController: UIViewController {
     return scrollView
   }()
 
-  private var likeButton = UIButton(type: .system)
+  private var likeButton = UIButton(type: .custom)
 
   var photo: Photo?
   private var apiCallDelegate: APICallDelegate?
@@ -86,7 +86,9 @@ final class SingleImageViewController: UIViewController {
   }
 
   func setIsLiked(_ isLiked: Bool) {
-    likeButton.imageView?.tintColor = isLiked ? .ypRed : .ypWhite
+    let color = isLiked ? UIColor.systemRed : UIColor.white
+    likeButton.tintColor = color
+    likeButton.imageView?.tintColor = color
   }
 
   // MARK: - Private methods
@@ -108,7 +110,7 @@ final class SingleImageViewController: UIViewController {
     let heightRatio = viewHeight / imageHeight
 
     let maxRatio = max(widthRatio, heightRatio)
-    //  let minRatio = min(widthRatio, heightRatio) // probably should chnge to min ratio so image will fit to screen
+    //  let minRatio = min(widthRatio, heightRatio) // probably should change to min ratio so image will fit to screen
 
     let scaledWidth = imageWidth * maxRatio
     let scaledHeight = imageHeight * maxRatio
@@ -167,12 +169,13 @@ final class SingleImageViewController: UIViewController {
   }
 
   private func setupButtons() {
-    likeButton = UIButton(type: .custom)
-    likeButton.setImage(UIImage(named: "heart.fill.white.shadow"), for: .normal)
+    let image = UIImage(named: "heart.fill.white.shadow")?.withRenderingMode(.alwaysTemplate)
+    likeButton.setImage(image, for: .normal)
     likeButton.addTarget(self, action: #selector(didTapLikeButton), for: .touchUpInside)
 
     let shareButton = UIButton(type: .system)
     shareButton.setImage(UIImage(named: "rectangle.and.arrow.up"), for: .normal)
+    shareButton.tintColor = .ypWhite
 
     shareButton.addTarget(self, action: #selector(didTapShareButton), for: .touchUpInside)
 
@@ -198,7 +201,6 @@ final class SingleImageViewController: UIViewController {
 
     [shareButton, likeButton].forEach { button in
       button.backgroundColor = .ypBlack
-      button.tintColor = .ypRed
       button.translatesAutoresizingMaskIntoConstraints = false
       button.layer.cornerRadius = 25
       button.clipsToBounds = true

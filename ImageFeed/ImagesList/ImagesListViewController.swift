@@ -49,7 +49,7 @@ final class ImagesListViewController: UIViewController {
         if let cell = self.tableView.cellForRow(at: IndexPath(row: index, section: 0))
           as? ImagesListCell
         {
-          cell.setIsLiked(updatedPhoto.isLiked, animated: true)
+          cell.setIsLiked(updatedPhoto.isLiked, animated: false)
           cell.photo = updatedPhoto
         }
         if let fullscreenVC = self.fullscreenVC {
@@ -121,7 +121,8 @@ extension ImagesListViewController: UITableViewDataSource {
     guard let cell = tableView.cellForRow(at: indexPath) as? ImagesListCell,
       let image = cell.photo
     else { return }
-    let fullscreenVC = SingleImageViewController(apiCallDelegate: self)
+    fullscreenVC = SingleImageViewController(apiCallDelegate: self)
+    guard let fullscreenVC else { return }
     fullscreenVC.configureImageView(with: image, placeholder: cell.thumbnailView.image)
     fullscreenVC.modalPresentationStyle = .fullScreen
 
