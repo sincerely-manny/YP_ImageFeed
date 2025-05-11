@@ -15,6 +15,8 @@ final class ImagesListCell: UITableViewCell {
   static let reuseIdentifier = "ImagesListCell"
 
   var photo: Photo? = nil
+  var apiCallDelegate: APICallDelegate?
+
   let thumbnailView = UIImageView()
   // MARK: - Private Properties
   private let style = ImageListCellStyle(gap: 8, paddingHorizontal: 16)
@@ -151,7 +153,10 @@ final class ImagesListCell: UITableViewCell {
   @objc func didTapHeartButton() {
     feedbackGenerator.prepare()
     feedbackGenerator.impactOccurred()
-    setIsLiked(isLiked ? false : true, animated: true)
+    //setIsLiked(isLiked ? false : true, animated: true)
+    if let photo = photo {
+      apiCallDelegate?.imageListCellDidTapLike(for: photo)
+    }
   }
 
   private func switchHeartButtonState(animated: Bool) {

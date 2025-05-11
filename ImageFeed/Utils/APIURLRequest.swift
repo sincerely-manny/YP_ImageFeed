@@ -3,7 +3,9 @@ import Foundation
 final class APIURLRequest {
   private static let oauth2Service = OAuth2Service.shared
 
-  static func getURLRequest(for endpoint: String, params: [String: String]? = [:]) -> URLRequest? {
+  static func getURLRequest(
+    for endpoint: String, params: [String: String]? = [:], method: HTTPMethod? = HTTPMethod.get
+  ) -> URLRequest? {
     guard let baseUrl = Constants.apiBaseURL else { return nil }
     var urlComponents = URLComponents(url: baseUrl, resolvingAgainstBaseURL: true)
     urlComponents?.path = endpoint
@@ -24,7 +26,7 @@ final class APIURLRequest {
     }
     request.setValue(
       "Bearer \(oauth2Service.accessToken ?? "")", forHTTPHeaderField: "Authorization")
-    request.httpMethod = HTTPMethod.get.rawValue
+    request.httpMethod = method?.rawValue ?? HTTPMethod.get.rawValue
     return request
   }
 }

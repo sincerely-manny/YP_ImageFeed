@@ -3,7 +3,9 @@ import UIKit
 final class ImagesListViewController: UIViewController {
   private let imagesListService = ImagesListService()
   private var photosObserver: NSObjectProtocol?
+  private var itemsObserver: NSObjectProtocol?
   private var photosCountRef = 0
+  private var fullscreenVC: SingleImageViewController?
 
   private lazy var tableView = {
     let tableView = UITableView(frame: .zero, style: .plain)
@@ -25,11 +27,35 @@ final class ImagesListViewController: UIViewController {
 
     photosObserver = NotificationCenter.default
       .addObserver(
-        forName: ImagesListService.didChangeNotification,
+        forName: ImagesListService.didChangeListNotification,
         object: nil,
         queue: .main
       ) { [weak self] _ in
         self?.updateTableViewAnimated()
+      }
+
+    itemsObserver = NotificationCenter.default
+      .addObserver(
+        forName: ImagesListService.didChangeItemNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] notification in
+        guard let self = self,
+          let userInfo = notification.userInfo,
+          let index = userInfo["index"] as? Int,
+          let updatedPhoto = userInfo["photo"] as? Photo
+        else { return }
+        //self.tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
+        if let cell = self.tableView.cellForRow(at: IndexPath(row: index, section: 0))
+          as? ImagesListCell
+        {
+          cell.setIsLiked(updatedPhoto.isLiked, animated: true)
+          cell.photo = updatedPhoto
+        }
+        if let fullscreenVC = self.fullscreenVC {
+          fullscreenVC.setIsLiked(updatedPhoto.isLiked)
+          fullscreenVC.photo = updatedPhoto
+        }
       }
 
     imagesListService.fetchPhotosNextPage()
@@ -85,6 +111,7 @@ extension ImagesListViewController: UITableViewDataSource {
     }
 
     let photo = imagesListService.photos[indexPath.row]
+    imageListCell.apiCallDelegate = self
     imageListCell.setIsLiked(photo.isLiked)
     imageListCell.configure(with: photo)
     return imageListCell
@@ -94,7 +121,7 @@ extension ImagesListViewController: UITableViewDataSource {
     guard let cell = tableView.cellForRow(at: indexPath) as? ImagesListCell,
       let image = cell.photo
     else { return }
-    let fullscreenVC = SingleImageViewController()
+    let fullscreenVC = SingleImageViewController(apiCallDelegate: self)
     fullscreenVC.configureImageView(with: image, placeholder: cell.thumbnailView.image)
     fullscreenVC.modalPresentationStyle = .fullScreen
 
@@ -123,4 +150,10 @@ extension ImagesListViewController: UITableViewDataSource {
 // MARK: - Extension UITableViewDelegate
 extension ImagesListViewController: UITableViewDelegate {
   // TODO: Implement table view delegate methods
+}
+
+extension ImagesListViewController: APICallDelegate {
+  func imageListCellDidTapLike(for photo: Photo) {
+    imagesListService.setLike(photo, to: !photo.isLiked)
+  }
 }

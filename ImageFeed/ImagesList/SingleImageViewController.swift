@@ -29,6 +29,21 @@ final class SingleImageViewController: UIViewController {
     return scrollView
   }()
 
+  private var likeButton = UIButton(type: .system)
+
+  var photo: Photo?
+  private var apiCallDelegate: APICallDelegate?
+
+  // MARK: - Init
+  init(apiCallDelegate: APICallDelegate? = nil) {
+    super.init(nibName: nil, bundle: nil)
+    self.apiCallDelegate = apiCallDelegate
+  }
+
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
   // MARK: - Lifecycle
 
   override func viewDidLoad() {
@@ -49,6 +64,7 @@ final class SingleImageViewController: UIViewController {
   // MARK: - Public methods
 
   func configureImageView(with image: Photo, placeholder: UIImage?) {
+    self.photo = image
     let blurredPlaceholder: UIImage?
     if let placeholderToBlur = placeholder {
       let processor = BlurImageProcessor(blurRadius: 2)
@@ -66,6 +82,11 @@ final class SingleImageViewController: UIViewController {
         .cacheOriginalImage,
       ]
     )
+    setIsLiked(image.isLiked)
+  }
+
+  func setIsLiked(_ isLiked: Bool) {
+    likeButton.imageView?.tintColor = isLiked ? .ypRed : .ypWhite
   }
 
   // MARK: - Private methods
@@ -146,9 +167,10 @@ final class SingleImageViewController: UIViewController {
   }
 
   private func setupButtons() {
-
-    let likeButton = UIButton(type: .system)
+    likeButton = UIButton(type: .custom)
     likeButton.setImage(UIImage(named: "heart.fill.white.shadow"), for: .normal)
+    likeButton.addTarget(self, action: #selector(didTapLikeButton), for: .touchUpInside)
+
     let shareButton = UIButton(type: .system)
     shareButton.setImage(UIImage(named: "rectangle.and.arrow.up"), for: .normal)
 
@@ -176,7 +198,7 @@ final class SingleImageViewController: UIViewController {
 
     [shareButton, likeButton].forEach { button in
       button.backgroundColor = .ypBlack
-      button.tintColor = .ypWhite
+      button.tintColor = .ypRed
       button.translatesAutoresizingMaskIntoConstraints = false
       button.layer.cornerRadius = 25
       button.clipsToBounds = true
@@ -202,8 +224,8 @@ final class SingleImageViewController: UIViewController {
   @objc private func didTapBackButton() {
     let transition = CATransition()
     transition.duration = 0.3
-    transition.type = .reveal
-    transition.subtype = .fromBottom
+    transition.type = .moveIn
+    transition.subtype = .fromTop
     view.window?.layer.add(transition, forKey: kCATransition)
     dismiss(animated: false)
   }
@@ -230,6 +252,11 @@ final class SingleImageViewController: UIViewController {
       applicationActivities: nil
     )
     present(activityViewController, animated: true)
+  }
+
+  @objc private func didTapLikeButton() {
+    guard let photo = photo else { return }
+    apiCallDelegate?.imageListCellDidTapLike(for: photo)
   }
 
 }
