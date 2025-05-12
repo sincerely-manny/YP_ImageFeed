@@ -1,4 +1,5 @@
 import Foundation
+import ProgressHUD
 
 enum ImagesListServiceConstants {
   static let pageSize = 10
@@ -7,6 +8,7 @@ enum ImagesListServiceConstants {
 final class ImagesListService {
   private(set) var photos: [Photo] = []
   private var likeTasks: [String: URLSessionTask] = [:]
+  private var isLoading: Bool = false
 
   private var lastLoadedPage: Int = 0
   static let didChangeListNotification = Notification.Name(
@@ -16,6 +18,11 @@ final class ImagesListService {
 
   func fetchPhotosNextPage() {
     assert(Thread.isMainThread)
+    guard !isLoading else {
+      print("❌ [ImagesListService] Error: Already loading")
+      return
+    }
+    isLoading = true
     let nextPage = lastLoadedPage + 1
     guard
       let request = APIURLRequest.getURLRequest(
@@ -55,6 +62,7 @@ final class ImagesListService {
         case .failure(let error):
           print("Error fetching photos: \(error)")
         }
+        self?.isLoading = false
       }
     }.resume()
   }
@@ -65,6 +73,7 @@ final class ImagesListService {
     completion: ((Result<Bool, Error>) -> Void)? = nil
   ) {
     assert(Thread.isMainThread)
+    UIBlockingProgressHUD.show()
     guard
       let request = APIURLRequest.getURLRequest(
         for: "/photos/\(photo.id)/like",
@@ -78,6 +87,22 @@ final class ImagesListService {
       task.cancel()
     }
 
+    guard let currentPhotoIndex = photos.firstIndex(where: { $0.id == photo.id }) else {
+      print("❌ [ImagesListService] Error: Photo not found")
+      return
+    }
+    let currentPhoto = photos[currentPhotoIndex]
+
+    let optimisticPhoto = Photo(
+      id: currentPhoto.id,
+      size: currentPhoto.size,
+      createdAt: currentPhoto.createdAt,
+      welcomeDescription: currentPhoto.welcomeDescription,
+      thumbImageURL: currentPhoto.thumbImageURL,
+      largeImageURL: currentPhoto.largeImageURL,
+      isLiked: isLiked
+    )
+
     let task = URLSession.shared.objectTask(for: request) {
       [weak self] (result: Result<LikeResponse, Error>) in
       DispatchQueue.main.async {
@@ -90,27 +115,21 @@ final class ImagesListService {
           }
           completion?(.success(likeResponse.photo.likedByUser))
         case .failure(let error):
+          print("❌ [ImagesListService] Error setting like: \(error)")
+          if let index = self?.photos.firstIndex(where: { $0.id == photo.id }) {
+            self?.photos[index] = currentPhoto
+            self?.postChangeItemNotification(for: currentPhoto, at: index)
+          }
           completion?(.failure(error))
         }
+        UIBlockingProgressHUD.dismiss()
       }
     }
 
     likeTasks[photo.id] = task
 
-    if let currentPhotoIndex = photos.firstIndex(where: { $0.id == photo.id }) {
-      let currentPhoto = photos[currentPhotoIndex]
-      let optimisticPhoto = Photo(
-        id: currentPhoto.id,
-        size: currentPhoto.size,
-        createdAt: currentPhoto.createdAt,
-        welcomeDescription: currentPhoto.welcomeDescription,
-        thumbImageURL: currentPhoto.thumbImageURL,
-        largeImageURL: currentPhoto.largeImageURL,
-        isLiked: isLiked
-      )
-      photos[currentPhotoIndex] = optimisticPhoto
-      postChangeItemNotification(for: optimisticPhoto, at: currentPhotoIndex)
-    }
+    photos[currentPhotoIndex] = optimisticPhoto
+    postChangeItemNotification(for: optimisticPhoto, at: currentPhotoIndex)
 
     task.resume()
   }

@@ -15,7 +15,7 @@ final class ImagesListCell: UITableViewCell {
   static let reuseIdentifier = "ImagesListCell"
 
   var photo: Photo? = nil
-  var apiCallDelegate: APICallDelegate?
+  weak var apiCallDelegate: APICallDelegate?
 
   let thumbnailView = UIImageView()
   // MARK: - Private Properties
