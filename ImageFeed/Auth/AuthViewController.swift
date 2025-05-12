@@ -67,13 +67,31 @@ final class AuthViewController: UIViewController {
 
 extension AuthViewController: WebViewViewControllerDelegate {
   func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
-    OAuth2Service.shared.getAccessToken(code: code) { result in
+    UIBlockingProgressHUD.show()
+    OAuth2Service.shared.getAccessToken(code: code) { [weak self] result in
+      UIBlockingProgressHUD.dismiss()
       switch result {
       case .success:
-        transitionToViewController(controllerIdentifier: "MainTabbarController")
+        ProfileService.shared.fetchProfileAndTransition(to: "MainTabbarController") { error in
+          if let error = error {
+            print("❌ Error in fetchProfileAndTransition: \(error)")
+            let alert = UIAlertController(
+              title: "Ошибка",
+              message: "Не удалось загрузить профиль",
+              preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+            self?.present(alert, animated: true, completion: nil)
+          }
+        }
       case .failure(let error):
-        //TODO: Handle error
         print("❌ Error fetching access token: \(error)")
+
+        let alert = UIAlertController(
+          title: "Что-то пошло не так",
+          message: "Не удалось войти в систему",
+          preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        self?.present(alert, animated: true, completion: nil)
       }
     }
   }

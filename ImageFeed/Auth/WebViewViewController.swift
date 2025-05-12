@@ -10,6 +10,7 @@ final class WebViewViewController: UIViewController {
   private let webView = WKWebView()
   private let activityIndicator = UIActivityIndicatorView(style: .large)
   private let progressBar = UIProgressView(progressViewStyle: .default)
+  private var estimatedProgressObservation: NSKeyValueObservation?
 
   private var delegate: WebViewViewControllerDelegate
 
@@ -43,6 +44,15 @@ final class WebViewViewController: UIViewController {
       URLQueryItem(name: "response_type", value: "code"),
       URLQueryItem(name: "scope", value: Constants.accessScope),
     ]
+
+    estimatedProgressObservation = webView.observe(
+      \.estimatedProgress,
+      options: [],
+      changeHandler: { [weak self] _, _ in
+        guard let self = self else { return }
+        self.updateProgress()
+      })
+
     if let url = urlComponents?.url {
       let request = URLRequest(url: url)
       webView.load(request)
@@ -50,22 +60,6 @@ final class WebViewViewController: UIViewController {
       print("❌ Error creating URL from components")
     }
 
-  }
-
-  override func viewWillAppear(_ animated: Bool) {
-    super.viewWillAppear(animated)
-    webView.addObserver(
-      self,
-      forKeyPath: #keyPath(WKWebView.estimatedProgress),
-      options: .new,
-      context: nil)
-  }
-
-  override func viewDidDisappear(_ animated: Bool) {
-    super.viewDidDisappear(animated)
-    webView.removeObserver(
-      self,
-      forKeyPath: #keyPath(WKWebView.estimatedProgress))
   }
 
   private func setupWebView() {
@@ -125,19 +119,6 @@ final class WebViewViewController: UIViewController {
 }
 
 extension WebViewViewController {
-  override func observeValue(
-    forKeyPath keyPath: String?,
-    of object: Any?,
-    change: [NSKeyValueChangeKey: Any]?,
-    context: UnsafeMutableRawPointer?
-  ) {
-    if keyPath == #keyPath(WKWebView.estimatedProgress) {
-      updateProgress()
-    } else {
-      super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-    }
-  }
-
   private func updateProgress() {
     progressBar.setProgress(Float(webView.estimatedProgress), animated: true)
     progressBar.isHidden = fabs(webView.estimatedProgress - 1.0) <= 0.0001
