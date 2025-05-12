@@ -5,7 +5,16 @@ enum ImagesListServiceConstants {
   static let pageSize = 10
 }
 
-final class ImagesListService {
+protocol ImagesListServiceProtocol {
+  var photos: [Photo] { get }
+  static var didChangeListNotification: Notification.Name { get }
+  static var didChangeItemNotification: Notification.Name { get }
+
+  func fetchPhotosNextPage()
+  func setLike(_ photo: Photo, to isLiked: Bool, completion: ((Result<Bool, Error>) -> Void)?)
+}
+
+final class ImagesListService: ImagesListServiceProtocol {
   private(set) var photos: [Photo] = []
   private var likeTasks: [String: URLSessionTask] = [:]
   private var isLoading: Bool = false

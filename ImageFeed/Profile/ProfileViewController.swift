@@ -9,7 +9,7 @@ enum ProfileViewControllerConstants {
 
 final class ProfileViewController: UIViewController, ProfileViewControllerProtocol {
   var presenter: ProfilePresenterProtocol?
-  
+
   private var header = UIView()
   private var avatar = UIImageView()
   private var nameLabel = UILabel()
@@ -21,16 +21,15 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
     setupView()
     setupHeader()
     setupFavorites(topAnchor: header.bottomAnchor)
-    
-    // Initialize presenter if it hasn't been set yet
+
     if presenter == nil {
       presenter = ProfilePresenter()
       presenter?.view = self
     }
-    
+
     presenter?.viewDidLoad()
   }
-  
+
   // MARK: - ProfileViewControllerProtocol
   func updateAvatar(with url: URL?) {
     if let url = url {
@@ -46,7 +45,7 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
       avatar.image = ProfileViewControllerConstants.placeholderImage
     }
   }
-  
+
   func updateProfileDetails(name: String, loginName: String, bio: String?) {
     setupName(parentView: header, topAnchor: avatar.bottomAnchor, text: name)
     setupTag(parentView: header, topAnchor: nameLabel.bottomAnchor, text: loginName)
