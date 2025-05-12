@@ -114,7 +114,11 @@ final class OAuth2Service {
 
   func logout() {
     clearAccessToken()
-    transitionToViewController(viewController: SplashViewController())
+    // Use the proper transition with the SplashViewController
+    DispatchQueue.main.async {
+      let splashVC = SplashViewController()
+      transitionToViewController(viewController: splashVC)
+    }
   }
 
 }

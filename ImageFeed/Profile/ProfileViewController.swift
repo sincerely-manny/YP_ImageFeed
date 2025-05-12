@@ -7,51 +7,33 @@ enum ProfileViewControllerConstants {
   static let placeholderImage = UIImage(named: "userpic_stub")
 }
 
-final class ProfileViewController: UIViewController {
-  private let profileService = ProfileService.shared
+final class ProfileViewController: UIViewController, ProfileViewControllerProtocol {
+  var presenter: ProfilePresenterProtocol?
+  
   private var header = UIView()
   private var avatar = UIImageView()
   private var nameLabel = UILabel()
   private var tagLabel = UILabel()
   private var bioLabel = UILabel()
 
-  private var user: Profile? {
-    didSet {
-      guard let user = user else { return }
-      setupName(parentView: header, topAnchor: avatar.bottomAnchor, text: user.name)
-      setupTag(
-        parentView: header, topAnchor: nameLabel.bottomAnchor, text: user.loginName)
-      setupBio(
-        parentView: header, topAnchor: tagLabel.bottomAnchor, text: user.bio ?? " ")
-    }
-  }
-
-  private var profileImageServiceObserver: NSObjectProtocol?
-
   override func viewDidLoad() {
     super.viewDidLoad()
     setupView()
     setupHeader()
     setupFavorites(topAnchor: header.bottomAnchor)
-    user = profileService.profile
-
-    profileImageServiceObserver = NotificationCenter.default
-      .addObserver(
-        forName: profileService.didChangeProfileImageNotification,
-        object: nil,
-        queue: .main
-      ) { [weak self] _ in
-        guard let self = self else { return }
-        self.updateAvatar()
-      }
-
-    updateAvatar()
-
+    
+    // Initialize presenter if it hasn't been set yet
+    if presenter == nil {
+      presenter = ProfilePresenter()
+      presenter?.view = self
+    }
+    
+    presenter?.viewDidLoad()
   }
-
-  private func updateAvatar() {
-    guard let profile = profileService.profile else { return }
-    if let url = profile.avatar {
+  
+  // MARK: - ProfileViewControllerProtocol
+  func updateAvatar(with url: URL?) {
+    if let url = url {
       avatar.kf.setImage(
         with: url,
         placeholder: ProfileViewControllerConstants.placeholderImage,
@@ -63,6 +45,12 @@ final class ProfileViewController: UIViewController {
     } else {
       avatar.image = ProfileViewControllerConstants.placeholderImage
     }
+  }
+  
+  func updateProfileDetails(name: String, loginName: String, bio: String?) {
+    setupName(parentView: header, topAnchor: avatar.bottomAnchor, text: name)
+    setupTag(parentView: header, topAnchor: nameLabel.bottomAnchor, text: loginName)
+    setupBio(parentView: header, topAnchor: tagLabel.bottomAnchor, text: bio ?? " ")
   }
 
   // MARK: - Setup subviews
@@ -147,7 +135,7 @@ final class ProfileViewController: UIViewController {
     let cancelAction = UIAlertAction(title: "Нет", style: .cancel)
     let okAction = UIAlertAction(title: "Да", style: .default) { [weak self] _ in
       guard let self = self else { return }
-      OAuth2Service.shared.logout()
+      self.presenter?.logoutButtonPressed()
       self.dismiss(animated: true)
     }
     alert.addAction(okAction)
@@ -157,9 +145,7 @@ final class ProfileViewController: UIViewController {
 
   // MARK: - Name
   private func setupName(parentView view: UIView, topAnchor: NSLayoutYAxisAnchor, text: String) {
-    let label = nameLabel
-
-    label.textColor = .ypWhite
+    nameLabel.textColor = .ypWhite
     let letterSpacing: CGFloat = -0.08
     let paragraphStyle = NSMutableParagraphStyle()
     paragraphStyle.lineHeightMultiple = 0.78
@@ -169,63 +155,58 @@ final class ProfileViewController: UIViewController {
       .foregroundColor: UIColor.ypWhite,
       .paragraphStyle: paragraphStyle,
     ]
-    label.attributedText = NSAttributedString(string: text, attributes: attributes)
+    nameLabel.attributedText = NSAttributedString(string: text, attributes: attributes)
 
-    label.translatesAutoresizingMaskIntoConstraints = false
-    view.addSubview(label)
+    nameLabel.translatesAutoresizingMaskIntoConstraints = false
+    view.addSubview(nameLabel)
 
     NSLayoutConstraint.activate([
-      label.topAnchor.constraint(equalTo: topAnchor, constant: 8),
-      label.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+      nameLabel.topAnchor.constraint(equalTo: topAnchor, constant: 8),
+      nameLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
     ])
   }
 
   // MARK: - Tag
   private func setupTag(parentView view: UIView, topAnchor: NSLayoutYAxisAnchor, text: String) {
-    let label = tagLabel
-
-    label.baselineAdjustment = .alignCenters
+    tagLabel.baselineAdjustment = .alignCenters
     let attributes: [NSAttributedString.Key: Any] = [
       .font: UIFont.systemFont(ofSize: 13, weight: .regular),
       .foregroundColor: UIColor.ypGray,
     ]
-    label.attributedText = NSAttributedString(string: text, attributes: attributes)
+    tagLabel.attributedText = NSAttributedString(string: text, attributes: attributes)
 
-    label.translatesAutoresizingMaskIntoConstraints = false
-    view.addSubview(label)
+    tagLabel.translatesAutoresizingMaskIntoConstraints = false
+    view.addSubview(tagLabel)
 
     NSLayoutConstraint.activate([
-      label.heightAnchor.constraint(equalToConstant: 18),
-      label.topAnchor.constraint(equalTo: topAnchor, constant: 8),
-      label.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+      tagLabel.heightAnchor.constraint(equalToConstant: 18),
+      tagLabel.topAnchor.constraint(equalTo: topAnchor, constant: 8),
+      tagLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
     ])
   }
 
   // MARK: - Bio
   private func setupBio(parentView view: UIView, topAnchor: NSLayoutYAxisAnchor, text: String) {
-    let label = bioLabel
-
-    label.textColor = .ypWhite
-    label.baselineAdjustment = .alignCenters
-    label.numberOfLines = 1
-    label.lineBreakMode = .byTruncatingTail
-    label.text = text
+    bioLabel.textColor = .ypWhite
+    bioLabel.baselineAdjustment = .alignCenters
+    bioLabel.numberOfLines = 1
+    bioLabel.lineBreakMode = .byTruncatingTail
 
     let attributes: [NSAttributedString.Key: Any] = [
       .font: UIFont.systemFont(ofSize: 13, weight: .regular),
       .foregroundColor: UIColor.ypWhite,
     ]
-    label.attributedText = NSAttributedString(string: text, attributes: attributes)
+    bioLabel.attributedText = NSAttributedString(string: text, attributes: attributes)
 
-    label.translatesAutoresizingMaskIntoConstraints = false
-    view.addSubview(label)
+    bioLabel.translatesAutoresizingMaskIntoConstraints = false
+    view.addSubview(bioLabel)
 
     NSLayoutConstraint.activate([
-      label.heightAnchor.constraint(equalToConstant: 18),
-      label.topAnchor.constraint(equalTo: topAnchor, constant: 8),
-      label.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-      label.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-      label.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+      bioLabel.heightAnchor.constraint(equalToConstant: 18),
+      bioLabel.topAnchor.constraint(equalTo: topAnchor, constant: 8),
+      bioLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+      bioLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+      bioLabel.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
     ])
   }
 
@@ -265,5 +246,4 @@ final class ProfileViewController: UIViewController {
       label.leadingAnchor.constraint(equalTo: container.layoutMarginsGuide.leadingAnchor),
     ])
   }
-
 }
