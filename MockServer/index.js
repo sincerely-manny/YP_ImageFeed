@@ -169,6 +169,9 @@ async function deleteAllImages() {
   console.log('Deleting old images...');
   const files = fs.readdirSync(imagesDir);
   for (const file of files) {
+    if (file.split('.').pop() !== 'jpg') {
+      continue;
+    }
     const filePath = path.join(imagesDir, file);
     fs.unlink(filePath, (err) => {
       if (err) {
