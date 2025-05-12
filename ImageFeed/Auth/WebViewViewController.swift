@@ -134,17 +134,11 @@ extension WebViewViewController: WKNavigationDelegate {
   }
 
   private func grabOAuthCode(from navigationAction: WKNavigationAction) throws -> String {
-    guard let url = navigationAction.request.url,
-      let urlComponents = URLComponents(string: url.absoluteString),
-      urlComponents.path == "/oauth/authorize/native"
-    else {
+    guard let url = navigationAction.request.url else {
       throw WebViewViewControllerError.invalidURL
     }
 
-    guard let items = urlComponents.queryItems,
-      let codeItem = items.first(where: { $0.name == "code" }),
-      let code = codeItem.value
-    else {
+    guard let code = presenter?.code(from: url) else {
       throw WebViewViewControllerError.codeNotFound
     }
 

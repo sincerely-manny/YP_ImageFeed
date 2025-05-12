@@ -152,7 +152,7 @@ final class ProfileViewController: UIViewController {
     }
     alert.addAction(okAction)
     alert.addAction(cancelAction)
-    present(alert, animated: true)
+    self.present(alert, animated: true)
   }
 
   // MARK: - Name
