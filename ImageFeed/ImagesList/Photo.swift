@@ -22,9 +22,9 @@ class Photo {
   init(photoResponse: PhotosResponse) {
     self.id = photoResponse.id
     self.size = CGSize(width: photoResponse.width, height: photoResponse.height)
-    self.createdAt = DateFormatter().date(from: photoResponse.createdAt)
+    self.createdAt = ISO8601DateFormatter().date(from: photoResponse.createdAt)
     self.welcomeDescription = photoResponse.description
-    self.thumbImageURL = photoResponse.urls.thumb
+    self.thumbImageURL = photoResponse.urls.regular
     self.largeImageURL = photoResponse.urls.raw
     self.isLiked = photoResponse.likedByUser
   }
