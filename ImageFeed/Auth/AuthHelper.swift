@@ -26,6 +26,7 @@ final class AuthHelper: AuthHelperProtocol {
       return nil
     }
 
+    urlComponents.path = "/oauth/authorize"
     urlComponents.queryItems = [
       URLQueryItem(name: "client_id", value: configuration.accessKey),
       URLQueryItem(name: "redirect_uri", value: configuration.redirectURI),
