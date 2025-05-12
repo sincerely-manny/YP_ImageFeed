@@ -11,6 +11,7 @@ final class WebViewViewController: UIViewController {
   private let activityIndicator = UIActivityIndicatorView(style: .large)
   private let progressBar = UIProgressView(progressViewStyle: .default)
   private var estimatedProgressObservation: NSKeyValueObservation?
+  var presenter: WebViewPresenterProtocol?
 
   private var delegate: WebViewViewControllerDelegate
 
@@ -32,18 +33,7 @@ final class WebViewViewController: UIViewController {
     setupActivityIndicator()
     setupProgressBar()
 
-    guard let baseUrl = Constants.defaultBaseURL else {
-      print("❌ Error: Base URL is nil")
-      return
-    }
-    var urlComponents = URLComponents(url: baseUrl, resolvingAgainstBaseURL: true)
-    urlComponents?.path = "/oauth/authorize"
-    urlComponents?.queryItems = [
-      URLQueryItem(name: "client_id", value: Constants.accessKey),
-      URLQueryItem(name: "redirect_uri", value: Constants.redirectURI),
-      URLQueryItem(name: "response_type", value: "code"),
-      URLQueryItem(name: "scope", value: Constants.accessScope),
-    ]
+    presenter?.viewDidLoad()
 
     estimatedProgressObservation = webView.observe(
       \.estimatedProgress,
@@ -52,13 +42,6 @@ final class WebViewViewController: UIViewController {
         guard let self = self else { return }
         self.updateProgress()
       })
-
-    if let url = urlComponents?.url {
-      let request = URLRequest(url: url)
-      webView.load(request)
-    } else {
-      print("❌ Error creating URL from components")
-    }
 
   }
 
@@ -125,6 +108,8 @@ extension WebViewViewController {
   }
 }
 
+// MARK: - WKNavigationDelegate
+
 extension WebViewViewController: WKNavigationDelegate {
   func webView(
     _ webView: WKWebView,
@@ -180,5 +165,11 @@ extension WebViewViewController: WKNavigationDelegate {
     withError error: Error
   ) {
     activityIndicator.stopAnimating()
+  }
+}
+
+extension WebViewViewController: WebViewViewControllerProtocol {
+  func load(request: URLRequest) {
+    webView.load(request)
   }
 }
