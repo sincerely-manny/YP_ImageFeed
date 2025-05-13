@@ -1,3 +1,4 @@
+import Kingfisher
 import LinkPresentation
 import UIKit
 
@@ -28,6 +29,21 @@ final class SingleImageViewController: UIViewController {
     return scrollView
   }()
 
+  private var likeButton = UIButton(type: .custom)
+
+  var photo: Photo?
+  private var apiCallDelegate: APICallDelegate?
+
+  // MARK: - Init
+  init(apiCallDelegate: APICallDelegate? = nil) {
+    super.init(nibName: nil, bundle: nil)
+    self.apiCallDelegate = apiCallDelegate
+  }
+
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
   // MARK: - Lifecycle
 
   override func viewDidLoad() {
@@ -47,8 +63,32 @@ final class SingleImageViewController: UIViewController {
 
   // MARK: - Public methods
 
-  func configureImageView(with image: UIImage) {
-    imageView.image = image
+  func configureImageView(with image: Photo, placeholder: UIImage?) {
+    self.photo = image
+    let blurredPlaceholder: UIImage?
+    if let placeholderToBlur = placeholder {
+      let processor = BlurImageProcessor(blurRadius: 2)
+      blurredPlaceholder = processor.process(item: .image(placeholderToBlur), options: .init([]))
+    } else {
+      blurredPlaceholder = nil
+    }
+
+    imageView.kf.indicatorType = .activity
+    self.imageView.kf.setImage(
+      with: URL(string: image.largeImageURL),
+      placeholder: blurredPlaceholder ?? UIImage(named: "card_stub"),
+      options: [
+        .transition(.fade(0.2)),
+        .cacheOriginalImage,
+      ]
+    )
+    setIsLiked(image.isLiked)
+  }
+
+  func setIsLiked(_ isLiked: Bool) {
+    let color = isLiked ? UIColor.systemRed : UIColor.white
+    likeButton.tintColor = color
+    likeButton.imageView?.tintColor = color
   }
 
   // MARK: - Private methods
@@ -70,7 +110,7 @@ final class SingleImageViewController: UIViewController {
     let heightRatio = viewHeight / imageHeight
 
     let maxRatio = max(widthRatio, heightRatio)
-    //  let minRatio = min(widthRatio, heightRatio) // probably should chnge to min ratio so image will fit to screen
+    //  let minRatio = min(widthRatio, heightRatio) // probably should change to min ratio so image will fit to screen
 
     let scaledWidth = imageWidth * maxRatio
     let scaledHeight = imageHeight * maxRatio
@@ -129,11 +169,13 @@ final class SingleImageViewController: UIViewController {
   }
 
   private func setupButtons() {
+    let image = UIImage(named: "heart.fill.white.shadow")?.withRenderingMode(.alwaysTemplate)
+    likeButton.setImage(image, for: .normal)
+    likeButton.addTarget(self, action: #selector(didTapLikeButton), for: .touchUpInside)
 
-    let likeButton = UIButton(type: .system)
-    likeButton.setImage(UIImage(named: "heart.fill.white.shadow"), for: .normal)
     let shareButton = UIButton(type: .system)
     shareButton.setImage(UIImage(named: "rectangle.and.arrow.up"), for: .normal)
+    shareButton.tintColor = .ypWhite
 
     shareButton.addTarget(self, action: #selector(didTapShareButton), for: .touchUpInside)
 
@@ -159,7 +201,6 @@ final class SingleImageViewController: UIViewController {
 
     [shareButton, likeButton].forEach { button in
       button.backgroundColor = .ypBlack
-      button.tintColor = .ypWhite
       button.translatesAutoresizingMaskIntoConstraints = false
       button.layer.cornerRadius = 25
       button.clipsToBounds = true
@@ -183,7 +224,12 @@ final class SingleImageViewController: UIViewController {
   }
 
   @objc private func didTapBackButton() {
-    dismiss(animated: true)
+    let transition = CATransition()
+    transition.duration = 0.3
+    transition.type = .moveIn
+    transition.subtype = .fromTop
+    view.window?.layer.add(transition, forKey: kCATransition)
+    dismiss(animated: false)
   }
 
   @objc private func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
@@ -208,6 +254,11 @@ final class SingleImageViewController: UIViewController {
       applicationActivities: nil
     )
     present(activityViewController, animated: true)
+  }
+
+  @objc private func didTapLikeButton() {
+    guard let photo = photo else { return }
+    apiCallDelegate?.imageListCellDidTapLike(for: photo)
   }
 
 }

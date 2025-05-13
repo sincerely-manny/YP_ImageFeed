@@ -1,3 +1,4 @@
+import Kingfisher
 import UIKit
 
 // MARK: - Style
@@ -6,13 +7,20 @@ struct ImageListCellStyle {
   let paddingHorizontal: CGFloat
 }
 
+enum ImageListCellConstants {
+  static let placeholderImage = UIImage(named: "card_stub")
+}
+
 final class ImagesListCell: UITableViewCell {
   static let reuseIdentifier = "ImagesListCell"
 
+  var photo: Photo? = nil
+  weak var apiCallDelegate: APICallDelegate?
+
+  let thumbnailView = UIImageView()
   // MARK: - Private Properties
   private let style = ImageListCellStyle(gap: 8, paddingHorizontal: 16)
 
-  let thumbnailView = UIImageView()
   private let heartButton = UIButton()
   private let labelContainerView = GradientView()
   private let labelView = UILabel()
@@ -44,22 +52,30 @@ final class ImagesListCell: UITableViewCell {
 
   override func prepareForReuse() {
     super.prepareForReuse()
+    thumbnailView.kf.cancelDownloadTask()
     thumbnailView.image = nil
     aspectRatioConstraint?.isActive = false
   }
 
   // MARK: - UI Updates
-  func configure(with image: UIImage?, date: Date = Date()) {
-    thumbnailView.image = image
-    let text = dateFormatter.string(from: date)
+  func configure(with image: Photo, date: Date = Date()) {
+    self.photo = image
+    let text = image.createdAt != nil ? dateFormatter.string(from: image.createdAt ?? Date()) : ""
     setLabelText(text)
-    if let image = image {
-      let aspectRatio = image.size.height / image.size.width
-      aspectRatioConstraint?.isActive = false
-      aspectRatioConstraint = thumbnailView.heightAnchor.constraint(
-        equalTo: thumbnailView.widthAnchor, multiplier: aspectRatio)
-      aspectRatioConstraint?.isActive = true
-    }
+    let aspectRatio = image.size.height / image.size.width
+    aspectRatioConstraint?.isActive = false
+    aspectRatioConstraint = thumbnailView.heightAnchor.constraint(
+      equalTo: thumbnailView.widthAnchor, multiplier: aspectRatio)
+    aspectRatioConstraint?.isActive = true
+    thumbnailView.kf.indicatorType = .activity
+    thumbnailView.kf.setImage(
+      with: URL(string: image.thumbImageURL),
+      placeholder: ImageListCellConstants.placeholderImage,
+      options: [
+        .transition(.fade(0.2)),
+        .cacheOriginalImage,
+      ]
+    )
 
     setNeedsLayout()
     layoutIfNeeded()
@@ -96,7 +112,8 @@ final class ImagesListCell: UITableViewCell {
       thumbnailView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
       thumbnailView.trailingAnchor.constraint(
         equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-      thumbnailView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor)
+      thumbnailView.bottomAnchor.constraint(
+        lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor),
     ])
   }
 
@@ -136,7 +153,10 @@ final class ImagesListCell: UITableViewCell {
   @objc func didTapHeartButton() {
     feedbackGenerator.prepare()
     feedbackGenerator.impactOccurred()
-    setIsLiked(isLiked ? false : true, animated: true)
+    //setIsLiked(isLiked ? false : true, animated: true)
+    if let photo = photo {
+      apiCallDelegate?.imageListCellDidTapLike(for: photo)
+    }
   }
 
   private func switchHeartButtonState(animated: Bool) {
