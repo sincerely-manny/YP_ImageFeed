@@ -16,21 +16,30 @@ class Image_FeedUITests: XCTestCase {
 
     XCTAssertTrue(webView.waitForExistence(timeout: 5))
 
+    if webView.buttons["Accept cookies"].exists {
+      webView.buttons["Accept cookies"].tap()
+    }
+
     let loginTextField = webView.descendants(matching: .textField).element
     XCTAssertTrue(loginTextField.waitForExistence(timeout: 5))
 
     loginTextField.tap()
-    loginTextField.typeText("-")
+    loginTextField.typeText("--------------------")
     webView.swipeUp()
 
     let passwordTextField = webView.descendants(matching: .secureTextField).element
     XCTAssertTrue(passwordTextField.waitForExistence(timeout: 5))
 
     passwordTextField.tap()
-    passwordTextField.typeText("-")
+    passwordTextField.typeText("--------------------")
     webView.swipeUp()
 
     webView.buttons["Login"].tap()
+
+    sleep(2)
+    if webView.exists && webView.buttons["Login"].exists {
+      webView.buttons["Login"].tap()
+    }
 
     let tablesQuery = app.tables
     let cell = tablesQuery.children(matching: .cell).element(boundBy: 0)
@@ -69,8 +78,8 @@ class Image_FeedUITests: XCTestCase {
     sleep(3)
     app.tabBars.buttons.element(boundBy: 1).tap()
 
-    XCTAssertTrue(app.staticTexts["Name Lastname"].exists)
-    XCTAssertTrue(app.staticTexts["@username"].exists)
+    XCTAssertTrue(app.staticTexts["John Doe"].exists)
+    XCTAssertTrue(app.staticTexts["@mockuser"].exists)
 
     app.buttons["logout button"].tap()
 
