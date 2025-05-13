@@ -123,6 +123,7 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
     ])
 
     exitButton.addTarget(self, action: #selector(exitButtonTapped), for: .touchUpInside)
+    exitButton.accessibilityIdentifier = "logout button"
   }
 
   @objc private func exitButtonTapped() {
@@ -132,14 +133,17 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
       preferredStyle: .alert
     )
     let cancelAction = UIAlertAction(title: "Нет", style: .cancel)
+    cancelAction.accessibilityIdentifier = "No"
     let okAction = UIAlertAction(title: "Да", style: .default) { [weak self] _ in
       guard let self = self else { return }
       self.presenter?.logoutButtonPressed()
       self.dismiss(animated: true)
     }
+    okAction.accessibilityIdentifier = "Yes"
     alert.addAction(okAction)
     alert.addAction(cancelAction)
-    self.present(alert, animated: true)
+    alert.view.accessibilityIdentifier = "Bye bye!"
+    present(alert, animated: true)
   }
 
   // MARK: - Name
