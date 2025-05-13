@@ -27,6 +27,7 @@ final class AuthViewController: UIViewController {
 
   private func setupLoginButton() {
     let loginButton = UIButton(type: .system)
+    loginButton.accessibilityIdentifier = "Authenticate"
 
     loginButton.setAttributedTitle(
       NSAttributedString(

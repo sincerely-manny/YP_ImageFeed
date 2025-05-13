@@ -166,6 +166,7 @@ final class SingleImageViewController: UIViewController {
       backButton.widthAnchor.constraint(equalToConstant: 44),
       backButton.heightAnchor.constraint(equalToConstant: 44),
     ])
+    backButton.accessibilityIdentifier = "nav back button white"
   }
 
   private func setupButtons() {

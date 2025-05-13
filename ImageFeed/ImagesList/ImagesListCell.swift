@@ -161,16 +161,18 @@ final class ImagesListCell: UITableViewCell {
 
   private func switchHeartButtonState(animated: Bool) {
     if isLiked {
-      self.heartButton.layer.opacity = 1
-      self.heartButton.imageView?.tintColor = .ypRed
+      heartButton.layer.opacity = 1
+      heartButton.imageView?.tintColor = .ypRed
     } else {
-      self.heartButton.layer.opacity = 0.5
-      self.heartButton.imageView?.tintColor = .ypWhite
+      heartButton.layer.opacity = 0.5
+      heartButton.imageView?.tintColor = .ypWhite
     }
 
     if animated, #available(iOS 17.0, *) {
       heartButton.imageView?.addSymbolEffect(.bounce)
     }
+
+    heartButton.accessibilityIdentifier = isLiked ? "like button on" : "like button off"
   }
 
   private func setupLabelContainer() {
