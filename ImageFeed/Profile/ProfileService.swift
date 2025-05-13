@@ -1,6 +1,14 @@
 import Foundation
 
-final class ProfileService {
+protocol ProfileServiceProtocol {
+  var profile: Profile? { get set }
+  var didChangeProfileImageNotification: Notification.Name { get }
+
+  func fetchProfile(completion: @escaping (Result<Profile, Error>) -> Void)
+  func fetchProfileAndTransition(to controllerIdentifier: String, completion: ((Error?) -> Void)?)
+}
+
+final class ProfileService: ProfileServiceProtocol {
   static let shared = ProfileService()
   var profile: Profile?
   let didChangeProfileImageNotification = Notification.Name(

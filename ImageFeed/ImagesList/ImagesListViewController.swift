@@ -1,9 +1,7 @@
 import UIKit
 
-final class ImagesListViewController: UIViewController {
-  private let imagesListService = ImagesListService()
-  private var photosObserver: NSObjectProtocol?
-  private var itemsObserver: NSObjectProtocol?
+final class ImagesListViewController: UIViewController, ImagesListViewControllerProtocol {
+  var presenter: ImagesListPresenterProtocol?
   private var photosCountRef = 0
   private var fullscreenVC: SingleImageViewController?
 
@@ -22,54 +20,57 @@ final class ImagesListViewController: UIViewController {
   // MARK: - Lifecycle
   override func viewDidLoad() {
     super.viewDidLoad()
-    photosCountRef = imagesListService.photos.count
+
+    // Initialize presenter if it hasn't been set yet
+    if presenter == nil {
+      presenter = ImagesListPresenter()
+      presenter?.view = self
+    }
+
+    photosCountRef = presenter?.photos.count ?? 0
     setupTableView()
-
-    photosObserver = NotificationCenter.default
-      .addObserver(
-        forName: ImagesListService.didChangeListNotification,
-        object: nil,
-        queue: .main
-      ) { [weak self] _ in
-        self?.updateTableViewAnimated()
-      }
-
-    itemsObserver = NotificationCenter.default
-      .addObserver(
-        forName: ImagesListService.didChangeItemNotification,
-        object: nil,
-        queue: .main
-      ) { [weak self] notification in
-        guard let self = self,
-          let userInfo = notification.userInfo,
-          let index = userInfo["index"] as? Int,
-          let updatedPhoto = userInfo["photo"] as? Photo
-        else { return }
-        //self.tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
-        if let cell = self.tableView.cellForRow(at: IndexPath(row: index, section: 0))
-          as? ImagesListCell
-        {
-          cell.setIsLiked(updatedPhoto.isLiked, animated: false)
-          cell.photo = updatedPhoto
-        }
-        if let fullscreenVC = self.fullscreenVC {
-          fullscreenVC.setIsLiked(updatedPhoto.isLiked)
-          fullscreenVC.photo = updatedPhoto
-        }
-      }
-
-    imagesListService.fetchPhotosNextPage()
+    presenter?.viewDidLoad()
   }
 
-  private func updateTableViewAnimated() {
-    let newPhotosCount = imagesListService.photos.count
-    let indexPaths = (photosCountRef..<newPhotosCount).map { IndexPath(row: $0, section: 0) }
-    photosCountRef = newPhotosCount
+  // MARK: - ImagesListViewControllerProtocol
+  func updateTableViewAnimated() {
+    guard let photosCount = presenter?.photos.count else { return }
+    let indexPaths = (photosCountRef..<photosCount).map { IndexPath(row: $0, section: 0) }
+    photosCountRef = photosCount
 
     if indexPaths.isEmpty {
       tableView.reloadData()
     } else {
       tableView.insertRows(at: indexPaths, with: .automatic)
+    }
+  }
+
+  func showSingleImage(photo: Photo, imageView: UIImageView) {
+    fullscreenVC = SingleImageViewController(apiCallDelegate: self)
+    guard let fullscreenVC else { return }
+    fullscreenVC.configureImageView(with: photo, placeholder: imageView.image)
+    fullscreenVC.modalPresentationStyle = .fullScreen
+
+    let transition = CATransition()
+    transition.duration = 0.3
+    transition.type = .reveal
+    transition.subtype = .fromBottom
+    view.window?.layer.add(transition, forKey: kCATransition)
+
+    present(fullscreenVC, animated: false)
+  }
+
+  func updateCell(at index: Int, with photo: Photo) {
+    if let cell = tableView.cellForRow(at: IndexPath(row: index, section: 0)) as? ImagesListCell {
+      cell.setIsLiked(photo.isLiked, animated: false)
+      cell.photo = photo
+    }
+  }
+
+  func configureFullscreenVC(with photo: Photo, isLiked: Bool) {
+    if let fullscreenVC = self.fullscreenVC {
+      fullscreenVC.setIsLiked(isLiked)
+      fullscreenVC.photo = photo
     }
   }
 
@@ -90,14 +91,13 @@ final class ImagesListViewController: UIViewController {
       tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
       tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
     ])
-
   }
 }
 
 // MARK: - Extension DataSource
 extension ImagesListViewController: UITableViewDataSource {
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    imagesListService.photos.count
+    return presenter?.photos.count ?? 0
   }
 
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -105,12 +105,14 @@ extension ImagesListViewController: UITableViewDataSource {
       let imageListCell = tableView.dequeueReusableCell(
         withIdentifier: ImagesListCell.reuseIdentifier,
         for: indexPath
-      ) as? ImagesListCell
+      ) as? ImagesListCell,
+      let presenter = presenter,
+      indexPath.row < presenter.photos.count
     else {
       return UITableViewCell()
     }
 
-    let photo = imagesListService.photos[indexPath.row]
+    let photo = presenter.photos[indexPath.row]
     imageListCell.apiCallDelegate = self
     imageListCell.setIsLiked(photo.isLiked)
     imageListCell.configure(with: photo)
@@ -121,18 +123,8 @@ extension ImagesListViewController: UITableViewDataSource {
     guard let cell = tableView.cellForRow(at: indexPath) as? ImagesListCell,
       let image = cell.photo
     else { return }
-    fullscreenVC = SingleImageViewController(apiCallDelegate: self)
-    guard let fullscreenVC else { return }
-    fullscreenVC.configureImageView(with: image, placeholder: cell.thumbnailView.image)
-    fullscreenVC.modalPresentationStyle = .fullScreen
 
-    let transition = CATransition()
-    transition.duration = 0.3
-    transition.type = .reveal
-    transition.subtype = .fromBottom
-    view.window?.layer.add(transition, forKey: kCATransition)
-
-    present(fullscreenVC, animated: false)
+    showSingleImage(photo: image, imageView: cell.thumbnailView)
   }
 
   func tableView(
@@ -140,11 +132,7 @@ extension ImagesListViewController: UITableViewDataSource {
     willDisplay cell: UITableViewCell,
     forRowAt indexPath: IndexPath
   ) {
-    let photosCount = imagesListService.photos.count
-    let middleOfLastPageIndex = photosCount - (ImagesListServiceConstants.pageSize / 2)
-    if indexPath.row == middleOfLastPageIndex {
-      imagesListService.fetchPhotosNextPage()
-    }
+    presenter?.fetchPhotosNextPage(at: indexPath)
   }
 }
 
@@ -155,6 +143,6 @@ extension ImagesListViewController: UITableViewDelegate {
 
 extension ImagesListViewController: APICallDelegate {
   func imageListCellDidTapLike(for photo: Photo) {
-    imagesListService.setLike(photo, to: !photo.isLiked)
+    presenter?.toggleLike(for: photo)
   }
 }

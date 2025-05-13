@@ -31,6 +31,9 @@ func transitionToViewController(controllerIdentifier: String) {
       message: "Failed to instantiate view controller with identifier \(controllerIdentifier)",
       preferredStyle: .alert)
     alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+    // Show alert if possible
+    UIApplication.shared.windows.first?.rootViewController?.present(alert, animated: true)
+    return
   }
   transitionToViewController(viewController: viewController)
 }

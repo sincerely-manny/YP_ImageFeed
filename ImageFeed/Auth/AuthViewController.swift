@@ -27,6 +27,7 @@ final class AuthViewController: UIViewController {
 
   private func setupLoginButton() {
     let loginButton = UIButton(type: .system)
+    loginButton.accessibilityIdentifier = "Authenticate"
 
     loginButton.setAttributedTitle(
       NSAttributedString(
@@ -60,8 +61,12 @@ final class AuthViewController: UIViewController {
   }
 
   @objc private func loginButtonTapped() {
-    let vc = WebViewViewController(delegate: self)
-    self.navigationController?.pushViewController(vc, animated: true)
+    let webViewViewController = WebViewViewController(delegate: self)
+    let authHelper = AuthHelper()
+    let webViewPresenter = WebViewPresenter(authHelper: authHelper)
+    webViewViewController.presenter = webViewPresenter
+    webViewPresenter.view = webViewViewController
+    self.navigationController?.pushViewController(webViewViewController, animated: true)
   }
 }
 
